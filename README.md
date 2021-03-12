@@ -1,8 +1,8 @@
 # SDIS Project
 
-SDIS Project for group T&lt;n&gt;G&lt;p&gt;&lt;q&gt;.
+SDIS Project for group T5G03.
 
 Group members:
 
-1. &lt;first name&gt; &lt;family name&gt; (&lt;email address&gt;)
-2. &lt;first name&gt; &lt;family name&gt; (&lt;email address&gt;)
+1.Ricardo Fontão (up201806317@fe.up.pt)
+2. Davide Castro (up201806512@fe.up.pt)
