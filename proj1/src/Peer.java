@@ -1,9 +1,11 @@
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.DatagramPacket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-class Peer {
+public class Peer {
 
     int id;
     String protocolVersion;
@@ -33,8 +35,17 @@ class Peer {
         Channel MDRchannel = new Channel(MDRinfo[0], Integer.parseInt(MDRinfo[1]));
 
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
-        System.out.println(peer.getFileIdString("test/1/teste.txt"));
-        peer.backup("src/teste.txt", 1);
+        System.out.println(peer.getFileIdString("teste.txt"));
+
+
+        if (peer.id == 1) {
+            peer.backup("teste.txt", 1);
+        }
+
+        if (peer.id == 2) {
+            peer.receive();
+        }
+
 
     }
 
@@ -45,6 +56,17 @@ class Peer {
         this.MCChannel = MCChannel;
         this.MDBChannel = MDBChannel;
         this.MDRChannel = MDRChannel;
+    }
+
+    public void receive() throws IOException {
+
+        byte[] received = this.MDBChannel.receive();
+        Message m = new Message(received);
+
+        //TODO: change to get methods
+        FileOutputStream out = new FileOutputStream(m.fileId + "-" + m.chunkNumber);
+        out.write(m.body);
+        out.close();
     }
 
     public void backup(String path, int replicationDegree) {
@@ -66,7 +88,7 @@ class Peer {
 
         byte[] data = null;
         try {
-            FileInputStream file = new FileInputStream("teste.txt");
+            FileInputStream file = new FileInputStream(path);
             data = new byte[file.available()];
             file.read(data, 0, file.available());
             file.close();

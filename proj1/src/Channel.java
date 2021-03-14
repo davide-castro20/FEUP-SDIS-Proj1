@@ -16,8 +16,15 @@ public class Channel {
         socket.joinGroup(this.group);
     }
 
-    public void send(byte[] message) throws IOException {
-        DatagramPacket packet = new DatagramPacket(message, message.length, this.group, this.port);
+    public void send(Message message) throws IOException {
+        byte[] toSend = message.toByteArray();
+        DatagramPacket packet = new DatagramPacket(toSend, toSend.length, this.group, this.port);
         this.socket.send(packet);
+    }
+
+    public byte[] receive() throws IOException {
+        byte[] mrbuf = new byte[65000];
+        this.socket.receive(new DatagramPacket(mrbuf, mrbuf.length));
+        return mrbuf;
     }
 }
