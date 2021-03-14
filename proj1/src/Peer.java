@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 public class Peer {
 
@@ -43,10 +44,12 @@ public class Peer {
         }
 
         if (peer.id == 2) {
-            while(true) {
+            byte[] received;
+            while((received = peer.MDBChannel.receive()) != null) {
+                byte[] finalReceived = received;
                 new Thread(() -> {
                     try {
-                        peer.receive();
+                        peer.receive(finalReceived);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -67,9 +70,8 @@ public class Peer {
         this.MDRChannel = MDRChannel;
     }
 
-    public void receive() throws IOException {
+    public void receive(byte[] received) throws IOException {
 
-        byte[] received = this.MDBChannel.receive();
         Message m = new Message(received);
 
         //TODO: change to get methods
@@ -135,13 +137,14 @@ public class Peer {
                 data = new byte[64000];
                 nRead = file.read(data, 0, 64000);
 
+                System.out.println(nRead);
+
                 if(nRead < 64000)
                     nRead = 0;
 
                 msgArgs[3] = String.valueOf(nChunk); // set chunk number
                 nChunk++;
-                System.out.println(nRead);
-                System.out.println(data);
+
                 Message msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
 
                 try {
