@@ -71,6 +71,13 @@ public class Peer {
 
     public void backup(String path, int replicationDegree) {
 
+        String[] msgArgs  = {this.protocolVersion,
+                            String.valueOf(this.id),
+                            this.getFileIdString(path),
+                            "0", // CHUNK NO
+                            String.valueOf(replicationDegree)};
+
+
         String headerString = this.protocolVersion +
                             " " +
                             "PUTCHUNK" +
@@ -96,12 +103,15 @@ public class Peer {
             e.printStackTrace();
         }
 
+        assert data != null; // ?
         byte[] toSend = new byte[header.length + data.length];
         System.arraycopy(header, 0, toSend, 0, header.length);
         System.arraycopy(data, 0, toSend, header.length, data.length);
 
+        Message msgToSend = new Message(toSend);
+
         try {
-            this.MDBChannel.send(toSend);
+            this.MDBChannel.send(msgToSend);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -13,7 +13,7 @@ public class Message {
         String[] header = message[0].split("[ ]");
 
         this.protocolVersion = header[0];
-        this.type = MessageType.BACKUP; //TODO
+        this.type = MessageType.valueOf(header[1]);
         this.senderId = Integer.parseInt(header[2]);
         this.fileId = header[3];
         this.chunkNumber = Integer.parseInt(header[4]);
@@ -22,33 +22,38 @@ public class Message {
         this.body = message[1].getBytes();
     }
 
-    public Message(MessageType type, String[] args) {
+    public Message(MessageType type, String[] args, byte[] body) {
         this.protocolVersion = args[0];
         this.type = type;
         this.senderId = Integer.parseInt(args[1]);
         this.fileId = args[2];
+        this.body = body;
 
+        //            case DELETE:
+        //                break;
         switch (type) {
-            case STORED:
+            case PUTCHUNK -> {
                 this.chunkNumber = Integer.parseInt(args[3]);
-
+                this.replicationDegree = Integer.parseInt(args[4]);
+            }
+            case STORED, CHUNK, GETCHUNK, REMOVED -> this.chunkNumber = Integer.parseInt(args[3]);
         }
     }
 
     public byte[] toByteArray() {
         String header = this.protocolVersion +
                 " " +
-                "STORED" + //TODO hardcoded
+                this.type.name() +
                 " " +
                 this.senderId + //PeerId
                 " " +
                 this.fileId + //FileId
                 " ";
 
-        if (this.chunkNumber == -1) {
+        if (this.chunkNumber != -1) {
             header += this.chunkNumber + " ";
         }
-        if (this.replicationDegree == -1) {
+        if (this.replicationDegree != -1) {
             header += this.replicationDegree + " ";
         }
 

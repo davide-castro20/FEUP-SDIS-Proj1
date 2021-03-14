@@ -1,7 +1,7 @@
 public enum MessageType {
-    BACKUP,
     STORED,
-    GET_CHUNK,
+    GETCHUNK,
+    PUTCHUNK,
     CHUNK,
     DELETE,
     REMOVED
