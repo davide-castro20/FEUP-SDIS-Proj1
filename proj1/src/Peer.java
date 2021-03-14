@@ -1,8 +1,5 @@
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -51,22 +48,20 @@ class Peer {
     }
 
     public void backup(String path, int replicationDegree) {
-        StringBuilder headerString = new StringBuilder();
 
-        headerString.append(this.protocolVersion)
-                .append(" ")
-                .append("PUTCHUNK")
-                .append(" ")
-                .append(this.id) //PeerId
-                .append(" ")
-                .append(this.getFileIdString(path)) //FileId
-                .append(" ")
-                .append(0) // CHUNK No
-                .append(" ")
-                .append(replicationDegree)
-                .append(" \r\n\r\n");
-
-        byte[] header = headerString.toString().getBytes();
+        String headerString = this.protocolVersion +
+                            " " +
+                            "PUTCHUNK" +
+                            " " +
+                            this.id + //PeerId
+                            " " +
+                            this.getFileIdString(path) + //FileId
+                            " " +
+                            0 + // CHUNK No
+                            " " +
+                            replicationDegree +
+                            " \r\n\r\n";
+        byte[] header = headerString.getBytes();
 
         byte[] data = new byte[64000];
         try {
