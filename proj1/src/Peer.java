@@ -1,5 +1,5 @@
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -33,7 +33,7 @@ class Peer {
         Channel MDRchannel = new Channel(MDRinfo[0], Integer.parseInt(MDRinfo[1]));
 
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
-        System.out.println(peer.getFileIdString("teste.txt"));
+        System.out.println(peer.getFileIdString("test/1/teste.txt"));
         peer.backup("src/teste.txt", 1);
 
     }
@@ -61,13 +61,14 @@ class Peer {
                             " " +
                             replicationDegree +
                             " \r\n\r\n";
+
         byte[] header = headerString.getBytes();
 
-        byte[] data = new byte[64000];
+        byte[] data = null;
         try {
-            RandomAccessFile file = new RandomAccessFile(path, "r");
-            file.seek(0);
-            file.read(data);
+            FileInputStream file = new FileInputStream("teste.txt");
+            data = new byte[file.available()];
+            file.read(data, 0, file.available());
             file.close();
         } catch (Exception e) {
             e.printStackTrace();
