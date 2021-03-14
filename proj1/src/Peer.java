@@ -41,13 +41,24 @@ public class Peer implements PeerStub {
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
         peer.bindRMI();
 
-//        System.out.println(peer.getFileIdString("teste.txt"));
+        System.out.println(peer.getFileIdString("davinki.mp3"));
 //        if (peer.id == 1) {
-//            peer.backup("teste.txt", 1);
+//            peer.backup("davinki.mp3", 1);
 //        }
 
         if (peer.id == 2) {
-            peer.receive();
+            byte[] received;
+            while ((received = peer.MDBChannel.receive()) != null) {
+                byte[] finalReceived = received;
+                new Thread(() -> {
+                    try {
+                        peer.receive(finalReceived);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+
+            }
         }
 
 
@@ -70,15 +81,24 @@ public class Peer implements PeerStub {
         registry.bind(this.serviceAccessPointName, stub);
     }
 
-    public void receive() throws IOException {
+    public void receive(byte[] received) throws IOException {
 
-        byte[] received = this.MDBChannel.receive();
         Message m = new Message(received);
 
         //TODO: change to get methods
         FileOutputStream out = new FileOutputStream(m.fileId + "-" + m.chunkNumber);
         out.write(m.body);
         out.close();
+
+        Message reply = new Message(MessageType.STORED,
+                new String[]{
+                        String.valueOf(this.protocolVersion),
+                        String.valueOf(this.id), m.fileId,
+                        String.valueOf(m.chunkNumber)},
+                null);
+
+        this.MCChannel.send(reply);
+
     }
 
     @Override
@@ -90,42 +110,27 @@ public class Peer implements PeerStub {
                 "0", // CHUNK NO
                 String.valueOf(replicationDegree)};
 
-
-        String headerString = this.protocolVersion +
-                " " +
-                "PUTCHUNK" +
-                " " +
-                this.id + //PeerId
-                " " +
-                this.getFileIdString(path) + //FileId
-                " " +
-                0 + // CHUNK No
-                " " +
-                replicationDegree +
-                " \r\n\r\n";
-
-        byte[] header = headerString.getBytes();
-
         byte[] data = null;
+        int nRead = -1;
+        int nChunk = 0;
         try {
             FileInputStream file = new FileInputStream(path);
-            data = new byte[file.available()];
-            file.read(data, 0, file.available());
+            while (nRead != 0) {
+                data = new byte[64000];
+                nRead = file.read(data, 0, 64000);
+                System.out.println(nRead);
+                if (nRead < 64000) nRead = 0;
+                msgArgs[3] = String.valueOf(nChunk); // set chunk number
+                nChunk++;
+                Message msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
+                try {
+                    this.MDBChannel.send(msgToSend);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             file.close();
         } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        assert data != null; // ?
-        byte[] toSend = new byte[header.length + data.length];
-        System.arraycopy(header, 0, toSend, 0, header.length);
-        System.arraycopy(data, 0, toSend, header.length, data.length);
-
-        Message msgToSend = new Message(toSend);
-
-        try {
-            this.MDBChannel.send(msgToSend);
-        } catch (IOException e) {
             e.printStackTrace();
         }
 
