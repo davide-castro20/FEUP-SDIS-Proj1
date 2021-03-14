@@ -35,15 +35,24 @@ public class Peer {
         Channel MDRchannel = new Channel(MDRinfo[0], Integer.parseInt(MDRinfo[1]));
 
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
-        System.out.println(peer.getFileIdString("teste.txt"));
+        System.out.println(peer.getFileIdString("davinki.mp3"));
 
 
         if (peer.id == 1) {
-            peer.backup("teste.txt", 1);
+            peer.backup("davinki.mp3", 1);
         }
 
         if (peer.id == 2) {
-            peer.receive();
+            while(true) {
+                new Thread(() -> {
+                    try {
+                        peer.receive();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }).start();
+
+            }
         }
 
 
@@ -67,54 +76,90 @@ public class Peer {
         FileOutputStream out = new FileOutputStream(m.fileId + "-" + m.chunkNumber);
         out.write(m.body);
         out.close();
+
+        Message reply = new Message(MessageType.STORED,
+                new String[]{
+                        String.valueOf(this.protocolVersion),
+                        String.valueOf(this.id), m.fileId,
+                        String.valueOf(m.chunkNumber)},
+                null);
+
+        this.MCChannel.send(reply);
     }
 
     public void backup(String path, int replicationDegree) {
 
-        String[] msgArgs  = {this.protocolVersion,
-                            String.valueOf(this.id),
-                            this.getFileIdString(path),
-                            "0", // CHUNK NO
-                            String.valueOf(replicationDegree)};
+//        String headerString = this.protocolVersion +
+//                " " +
+//                "PUTCHUNK" +
+//                " " +
+//                this.id + //PeerId
+//                " " +
+//                this.getFileIdString(path) + //FileId
+//                " " +
+//                0 + // CHUNK No
+//                " " +
+//                replicationDegree +
+//                " \r\n\r\n";
 
+//        byte[] header = headerString.getBytes();
 
-        String headerString = this.protocolVersion +
-                            " " +
-                            "PUTCHUNK" +
-                            " " +
-                            this.id + //PeerId
-                            " " +
-                            this.getFileIdString(path) + //FileId
-                            " " +
-                            0 + // CHUNK No
-                            " " +
-                            replicationDegree +
-                            " \r\n\r\n";
+//        byte[] data = null;
+//        try {
+//            FileInputStream file = new FileInputStream(path);
+//            data = new byte[file.available()];
+//            file.read(data, 0, file.available());
+//            file.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
-        byte[] header = headerString.getBytes();
+//        byte[] toSend = new byte[header.length + data.length];
+//        System.arraycopy(header, 0, toSend, 0, header.length);
+//        System.arraycopy(data, 0, toSend, header.length, data.length);
+//
+//        Message msgToSend = new Message(toSend);
+
+        String[] msgArgs = {this.protocolVersion,
+                String.valueOf(this.id),
+                this.getFileIdString(path),
+                null, // CHUNK NUMBER
+                String.valueOf(replicationDegree)};
 
         byte[] data = null;
+        int nRead = -1;
+        int nChunk = 0;
         try {
             FileInputStream file = new FileInputStream(path);
-            data = new byte[file.available()];
-            file.read(data, 0, file.available());
+            while(nRead != 0) {
+                data = new byte[64000];
+                nRead = file.read(data, 0, 64000);
+
+                if(nRead < 64000)
+                    nRead = 0;
+
+                msgArgs[3] = String.valueOf(nChunk); // set chunk number
+                nChunk++;
+                System.out.println(nRead);
+                System.out.println(data);
+                Message msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
+
+                try {
+                    this.MDBChannel.send(msgToSend);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
             file.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         assert data != null; // ?
-        byte[] toSend = new byte[header.length + data.length];
-        System.arraycopy(header, 0, toSend, 0, header.length);
-        System.arraycopy(data, 0, toSend, header.length, data.length);
 
-        Message msgToSend = new Message(toSend);
 
-        try {
-            this.MDBChannel.send(msgToSend);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
     }
 
