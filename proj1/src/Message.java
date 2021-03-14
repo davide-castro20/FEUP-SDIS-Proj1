@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class Message {
 
     String protocolVersion;
@@ -6,10 +8,10 @@ public class Message {
     String fileId;
     int chunkNumber = -1;
     int replicationDegree = -1;
-    byte[] body = null;
+    byte[] body;
 
     public Message(byte[] packet) {
-        String[] message = new String(packet).split("[\r\n\r\n]");
+        String[] message = new String(packet).split("[\r\n]2*");
         String[] header = message[0].split("[ ]");
 
         this.protocolVersion = header[0];
@@ -19,7 +21,16 @@ public class Message {
         this.chunkNumber = Integer.parseInt(header[4]);
         this.replicationDegree = Integer.parseInt(header[5]);
 
-        this.body = message[1].getBytes();
+        //Split returns an array with a lot of empty strings
+        boolean foundContent = false;
+        for (String s : message) {
+            if (!s.equals("")) {
+                this.body = s.replace("\u0000", "").getBytes();
+                foundContent = true;
+            }
+        }
+        if (!foundContent)
+            this.body = new byte[0];
     }
 
     public Message(MessageType type, String[] args, byte[] body) {
@@ -29,8 +40,6 @@ public class Message {
         this.fileId = args[2];
         this.body = body;
 
-        //            case DELETE:
-        //                break;
         switch (type) {
             case PUTCHUNK -> {
                 this.chunkNumber = Integer.parseInt(args[3]);
