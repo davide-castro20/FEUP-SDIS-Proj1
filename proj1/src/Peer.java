@@ -1,11 +1,15 @@
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.DatagramPacket;
+import java.rmi.AlreadyBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class Peer {
+public class Peer implements PeerStub {
 
     int id;
     String protocolVersion;
@@ -16,7 +20,7 @@ public class Peer {
     Channel MDRChannel;
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, AlreadyBoundException {
         if (args.length != 6) {
             System.out.println("Usage: java Peer <protocol_version> <peer_id> <service_access_point> <MC_address>:<MC_Port> <MDB_address>:<MDB_Port> <MDR_address>:<MDR_Port>");
         }
@@ -35,12 +39,12 @@ public class Peer {
         Channel MDRchannel = new Channel(MDRinfo[0], Integer.parseInt(MDRinfo[1]));
 
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
-        System.out.println(peer.getFileIdString("teste.txt"));
+        peer.bindRMI();
 
-
-        if (peer.id == 1) {
-            peer.backup("teste.txt", 1);
-        }
+//        System.out.println(peer.getFileIdString("teste.txt"));
+//        if (peer.id == 1) {
+//            peer.backup("teste.txt", 1);
+//        }
 
         if (peer.id == 2) {
             peer.receive();
@@ -58,6 +62,14 @@ public class Peer {
         this.MDRChannel = MDRChannel;
     }
 
+    public void bindRMI() throws RemoteException, AlreadyBoundException {
+        PeerStub stub = (PeerStub) UnicastRemoteObject.exportObject(this, 0);
+
+        // Bind the remote object's stub in the registry
+        Registry registry = LocateRegistry.getRegistry();
+        registry.bind(this.serviceAccessPointName, stub);
+    }
+
     public void receive() throws IOException {
 
         byte[] received = this.MDBChannel.receive();
@@ -69,27 +81,28 @@ public class Peer {
         out.close();
     }
 
-    public void backup(String path, int replicationDegree) {
+    @Override
+    public void backup(String path, int replicationDegree) throws RemoteException {
 
-        String[] msgArgs  = {this.protocolVersion,
-                            String.valueOf(this.id),
-                            this.getFileIdString(path),
-                            "0", // CHUNK NO
-                            String.valueOf(replicationDegree)};
+        String[] msgArgs = {this.protocolVersion,
+                String.valueOf(this.id),
+                this.getFileIdString(path),
+                "0", // CHUNK NO
+                String.valueOf(replicationDegree)};
 
 
         String headerString = this.protocolVersion +
-                            " " +
-                            "PUTCHUNK" +
-                            " " +
-                            this.id + //PeerId
-                            " " +
-                            this.getFileIdString(path) + //FileId
-                            " " +
-                            0 + // CHUNK No
-                            " " +
-                            replicationDegree +
-                            " \r\n\r\n";
+                " " +
+                "PUTCHUNK" +
+                " " +
+                this.id + //PeerId
+                " " +
+                this.getFileIdString(path) + //FileId
+                " " +
+                0 + // CHUNK No
+                " " +
+                replicationDegree +
+                " \r\n\r\n";
 
         byte[] header = headerString.getBytes();
 
@@ -115,6 +128,26 @@ public class Peer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+    }
+
+    @Override
+    public void restore(String path) throws RemoteException {
+
+    }
+
+    @Override
+    public void delete(String path) throws RemoteException {
+
+    }
+
+    @Override
+    public void reclaim(long amountOfBytes) throws RemoteException {
+
+    }
+
+    @Override
+    public void state() throws RemoteException {
 
     }
 

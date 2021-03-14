@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Backup 1-&gt;2" type="CompoundRunConfigurationType">
+    <toRun name="Peer 2" type="Application" />
+    <toRun name="Peer 1" type="Application" />
+    <toRun name="TestApp" type="Application" />
+    <method v="2" />
+  </configuration>
+</component>

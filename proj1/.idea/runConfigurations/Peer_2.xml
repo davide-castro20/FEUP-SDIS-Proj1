@@ -2,8 +2,8 @@
   <configuration default="false" name="Peer 2" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="Peer" />
     <module name="proj1" />
-    <option name="PROGRAM_PARAMETERS" value="1.0 2 app 230.0.0.0:8001 230.0.0.0:8002 230.0.0.0:8003" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/test/2" />
+    <option name="PROGRAM_PARAMETERS" value="1.0 2 Peer2 230.0.0.0:8001 230.0.0.0:8002 230.0.0.0:8003" />
+    <option name="WORKING_DIRECTORY" value="test/2" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

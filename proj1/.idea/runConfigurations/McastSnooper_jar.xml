@@ -1,8 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="McastSnooper.jar" type="JarApplication">
-    <option name="JAR_PATH" value="$PROJECT_DIR$/McastSnooper.jar" />
-    <option name="PROGRAM_PARAMETERS" value="230.0.0.0:8001 230.0.0.0:8002 230.0.0.0:8003" />
-    <option name="ALTERNATIVE_JRE_PATH" />
-    <method v="2" />
-  </configuration>
-</component>
