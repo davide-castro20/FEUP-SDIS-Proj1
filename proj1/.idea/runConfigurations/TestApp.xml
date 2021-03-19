@@ -2,7 +2,7 @@
   <configuration default="false" name="TestApp" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="TestApp" />
     <module name="proj1" />
-    <option name="PROGRAM_PARAMETERS" value="Peer1 BACKUP teste.txt 1" />
+    <option name="PROGRAM_PARAMETERS" value="Peer1 BACKUP davinki.mp3 1" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

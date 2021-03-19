@@ -8,6 +8,9 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class Peer implements PeerStub {
 
@@ -18,6 +21,8 @@ public class Peer implements PeerStub {
     Channel MCChannel;
     Channel MDBChannel;
     Channel MDRChannel;
+
+    ConcurrentMap<String, Chunk> distributedChunks;
 
 
     public static void main(String[] args) throws IOException, AlreadyBoundException {
@@ -41,25 +46,58 @@ public class Peer implements PeerStub {
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
         peer.bindRMI();
 
+        Thread MCthread = new Thread(() -> {
+            while (true) {
+                try {
+                    Message message = new Message(MCchannel.receive());
+                    if (message.type == MessageType.STORED) {
+                        String key = message.fileId + "-" + message.chunkNumber;
+                        Chunk c = peer.distributedChunks.get(key);
+                        c.addPeer(message.senderId);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        });
+
+        Thread MDBthread = new Thread(() -> {
+            while (true) {
+                try {
+                    Message m = new Message(MDBchannel.receive());
+                    if (m.senderId != peer.id) {
+                        peer.receive(m);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        });
+
+        MCthread.start();
+        MDBthread.start();
+
         System.out.println(peer.getFileIdString("davinki.mp3"));
 //        if (peer.id == 1) {
 //            peer.backup("davinki.mp3", 1);
 //        }
 
-        if (peer.id == 2) {
-            byte[] received;
-            while ((received = peer.MDBChannel.receive()) != null) {
-                byte[] finalReceived = received;
-                new Thread(() -> {
-                    try {
-                        peer.receive(finalReceived);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }).start();
-
-            }
-        }
+//        if (peer.id == 2) {
+//            byte[] received;
+//            while ((received = peer.MDBChannel.receive()) != null) {
+//                byte[] finalReceived = received;
+//                new Thread(() -> {
+//                    try {
+//                        peer.receive(finalReceived);
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }).start();
+//
+//            }
+//        }
 
 
     }
@@ -71,6 +109,7 @@ public class Peer implements PeerStub {
         this.MCChannel = MCChannel;
         this.MDBChannel = MDBChannel;
         this.MDRChannel = MDRChannel;
+        this.distributedChunks = new ConcurrentHashMap<>();
     }
 
     public void bindRMI() throws RemoteException, AlreadyBoundException {
@@ -81,14 +120,15 @@ public class Peer implements PeerStub {
         registry.bind(this.serviceAccessPointName, stub);
     }
 
-    public void receive(byte[] received) throws IOException {
-
-        Message m = new Message(received);
+    public void receive(Message m) throws IOException {
 
         //TODO: change to get methods
         FileOutputStream out = new FileOutputStream(m.fileId + "-" + m.chunkNumber);
         out.write(m.body);
         out.close();
+
+        Chunk c = new Chunk(m.fileId, m.chunkNumber, m.replicationDegree);
+        this.distributedChunks.put(m.fileId + "-" + m.chunkNumber, c);
 
         Message reply = new Message(MessageType.STORED,
                 new String[]{
@@ -96,6 +136,13 @@ public class Peer implements PeerStub {
                         String.valueOf(this.id), m.fileId,
                         String.valueOf(m.chunkNumber)},
                 null);
+
+        Random random = new Random();
+        try {
+            Thread.sleep(random.nextInt(400));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         this.MCChannel.send(reply);
 
@@ -110,7 +157,7 @@ public class Peer implements PeerStub {
                 "0", // CHUNK NO
                 String.valueOf(replicationDegree)};
 
-        byte[] data = null;
+        byte[] data;
         int nRead = -1;
         int nChunk = 0;
         try {
@@ -124,7 +171,18 @@ public class Peer implements PeerStub {
                 nChunk++;
                 Message msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
                 try {
-                    this.MDBChannel.send(msgToSend);
+                    int actualRepDegree = 0;
+                    int maxIterations = 5;
+                    int currentIteration = 1;
+                    while (actualRepDegree < replicationDegree || currentIteration < maxIterations) {
+                        this.MDBChannel.send(msgToSend);
+                        Thread.sleep(1000L * currentIteration);
+                        if (this.distributedChunks.containsKey(msgArgs[2] + "" + msgArgs[3])) {
+                            actualRepDegree = this.distributedChunks.get(msgArgs[2] + "" + msgArgs[3]).getPerceivedReplicationDegree();
+                        }
+                        currentIteration++;
+                    }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
