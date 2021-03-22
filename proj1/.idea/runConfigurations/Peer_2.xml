@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Peer 2" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="Peer" />
+    <option name="MAIN_CLASS_NAME" value="g03.Peer" />
     <module name="proj1" />
     <option name="PROGRAM_PARAMETERS" value="1.0 2 Peer2 230.0.0.0:8001 230.0.0.0:8002 230.0.0.0:8003" />
     <option name="WORKING_DIRECTORY" value="test/2" />

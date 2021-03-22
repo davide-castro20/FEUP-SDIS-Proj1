@@ -1,3 +1,5 @@
+package g03;
+
 public class Message {
 
     String protocolVersion;
@@ -17,7 +19,8 @@ public class Message {
         this.senderId = Integer.parseInt(header[2]);
         this.fileId = header[3];
         this.chunkNumber = Integer.parseInt(header[4]);
-        this.replicationDegree = Integer.parseInt(header[5]);
+        if(this.type == MessageType.PUTCHUNK)
+            this.replicationDegree = Integer.parseInt(header[5]);
 
         //Split returns an array with a lot of empty strings
         boolean foundContent = false;
@@ -74,5 +77,33 @@ public class Message {
         }
         return header.getBytes();
 
+    }
+
+    public byte[] getBody() {
+        return body;
+    }
+
+    public String getProtocolVersion() {
+        return protocolVersion;
+    }
+
+    public MessageType getType() {
+        return type;
+    }
+
+    public int getSenderId() {
+        return senderId;
+    }
+
+    public String getFileId() {
+        return fileId;
+    }
+
+    public int getChunkNumber() {
+        return chunkNumber;
+    }
+
+    public int getReplicationDegree() {
+        return replicationDegree;
     }
 }

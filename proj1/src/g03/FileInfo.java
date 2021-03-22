@@ -1,3 +1,5 @@
+package g03;
+
 public class FileInfo {
 
     private String path;
