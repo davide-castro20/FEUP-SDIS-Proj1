@@ -1,7 +1,4 @@
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -73,12 +70,22 @@ public class Peer implements PeerStub {
 
                                 Message msgToSend = new Message(MessageType.CHUNK, msgArgs, body);
 
-                                peer.MDRChannel
+                                Thread.sleep(new Random().nextInt(400));
+                                peer.MDRChannel.send(msgToSend);
+                                //TODO: falta parte de verificar se são recebidas chunk messages antes de enviar
 
                             }
                         }
+                    } else if(message.type == MessageType.DELETE) {
+                        peer.distributedChunks.forEach((key, value) -> {
+                            if(key.startsWith(message.fileId) && peer.distributedChunks.remove(key, value)) {
+                                File chunkToDelete = new File(key);
+                                chunkToDelete.delete();
+                            }
+                        });
+                        peer.distributedChunks.entrySet().removeIf(stringChunkEntry -> stringChunkEntry.getKey().startsWith(message.fileId));
                     }
-                } catch (IOException e) {
+                } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
