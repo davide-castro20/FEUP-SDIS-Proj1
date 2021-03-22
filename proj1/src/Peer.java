@@ -1,4 +1,5 @@
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.AlreadyBoundException;
@@ -23,6 +24,7 @@ public class Peer implements PeerStub {
     Channel MDRChannel;
 
     ConcurrentMap<String, Chunk> distributedChunks;
+    ConcurrentMap<String, FileInfo> files; // FilePath -> FileInfo
 
 
     public static void main(String[] args) throws IOException, AlreadyBoundException {
@@ -54,6 +56,27 @@ public class Peer implements PeerStub {
                         String key = message.fileId + "-" + message.chunkNumber;
                         Chunk c = peer.distributedChunks.get(key);
                         c.addPeer(message.senderId);
+                    } else if (message.type == MessageType.GETCHUNK) {
+                        String key = message.fileId + "-" + message.chunkNumber;
+                        if (peer.distributedChunks.containsKey(key)) {
+                            if(peer.distributedChunks.get(key).peers.contains(peer.id)) {
+
+                                String[] msgArgs = {peer.protocolVersion,
+                                        String.valueOf(peer.id),
+                                        message.fileId,
+                                        String.valueOf(message.chunkNumber)};
+
+                                byte[] body = null;
+                                try (FileInputStream file = new FileInputStream(key)) {
+                                    body = file.readAllBytes();
+                                }
+
+                                Message msgToSend = new Message(MessageType.CHUNK, msgArgs, body);
+
+                                peer.MDRChannel
+
+                            }
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -79,7 +102,7 @@ public class Peer implements PeerStub {
         MCthread.start();
         MDBthread.start();
 
-        System.out.println(peer.getFileIdString("davinki.mp3"));
+        System.out.println(Peer.getFileIdString("davinki.mp3"));
 //        if (peer.id == 1) {
 //            peer.backup("davinki.mp3", 1);
 //        }
@@ -110,6 +133,7 @@ public class Peer implements PeerStub {
         this.MDBChannel = MDBChannel;
         this.MDRChannel = MDRChannel;
         this.distributedChunks = new ConcurrentHashMap<>();
+        this.files = new ConcurrentHashMap<>();
     }
 
     public void bindRMI() throws RemoteException, AlreadyBoundException {
@@ -151,17 +175,18 @@ public class Peer implements PeerStub {
     @Override
     public void backup(String path, int replicationDegree) throws RemoteException {
 
+        String hash = Peer.getFileIdString(path);
         String[] msgArgs = {this.protocolVersion,
                 String.valueOf(this.id),
-                this.getFileIdString(path),
+                hash,
                 "0", // CHUNK NO
                 String.valueOf(replicationDegree)};
 
+        //TODO: Last chunk with 0 bytes
         byte[] data;
         int nRead = -1;
         int nChunk = 0;
-        try {
-            FileInputStream file = new FileInputStream(path);
+        try (FileInputStream file = new FileInputStream(path)) {
             while (nRead != 0) {
                 data = new byte[64000];
                 nRead = file.read(data, 0, 64000);
@@ -187,7 +212,10 @@ public class Peer implements PeerStub {
                     e.printStackTrace();
                 }
             }
-            file.close();
+
+            if (!this.files.containsKey(path)) {
+                this.files.put(path, new FileInfo(path, hash, replicationDegree, nChunk));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -196,7 +224,37 @@ public class Peer implements PeerStub {
 
     @Override
     public void restore(String path) throws RemoteException {
+        if (!this.files.containsKey(path)) {
+            System.err.println("File not found");
+            return;
+        }
 
+        FileInfo file = this.files.get(path);
+        String hash = file.getHash();
+
+        try (FileOutputStream out = new FileOutputStream(path + "-restored")) {
+
+            for (int i = 0; i < file.getChunkAmount(); i++) {
+                String[] msgArgs = {this.protocolVersion,
+                        String.valueOf(this.id),
+                        hash,
+                        String.valueOf(i)};
+
+                Message msgToSend = new Message(MessageType.GETCHUNK, msgArgs, null);
+
+                try {
+                    this.MCChannel.send(msgToSend);
+                    Message message = new Message(MDRChannel.receive());
+                    out.write(message.body);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -214,7 +272,7 @@ public class Peer implements PeerStub {
 
     }
 
-    private String getFileIdString(String path) {
+    static String getFileIdString(String path) {
         MessageDigest digest = null;
         try {
             digest = MessageDigest.getInstance("SHA-256");
@@ -228,6 +286,8 @@ public class Peer implements PeerStub {
             result.append(Character.forDigit((b >> 4) & 0xF, 16))
                     .append(Character.forDigit((b & 0xF), 16));
         }
+
+
 
         return result.toString();
     }
