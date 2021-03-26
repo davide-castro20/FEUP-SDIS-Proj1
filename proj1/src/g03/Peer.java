@@ -13,7 +13,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Random;
+import java.util.List;
 import java.util.concurrent.*;
 
 public class Peer implements PeerStub {
@@ -30,6 +30,8 @@ public class Peer implements PeerStub {
     ConcurrentMap<String, FileInfo> files; // FilePath -> FileInfo
 
     ConcurrentMap<String, ScheduledFuture<?>> messagesToSend;
+
+    ConcurrentMap<String, List<Integer>> chunksToRestore;
 
     ScheduledExecutorService pool;
     ScheduledExecutorService synchronizer;
@@ -68,12 +70,15 @@ public class Peer implements PeerStub {
         this.id = id;
         this.protocolVersion = protocolVersion;
         this.serviceAccessPointName = serviceAccessPointName;
+
         this.MCChannel = MCChannel;
         this.MDBChannel = MDBChannel;
         this.MDRChannel = MDRChannel;
+
         this.storedChunks = new ConcurrentHashMap<>();
         this.files = new ConcurrentHashMap<>();
         this.messagesToSend = new ConcurrentHashMap<>();
+        this.chunksToRestore = new ConcurrentHashMap<>();
 
         this.pool = Executors.newScheduledThreadPool(16);
         this.synchronizer = Executors.newSingleThreadScheduledExecutor();
@@ -193,6 +198,10 @@ public class Peer implements PeerStub {
 
     public ScheduledExecutorService getPool() {
         return pool;
+    }
+
+    public ConcurrentMap<String, List<Integer>> getChunksToRestore() {
+        return chunksToRestore;
     }
 }
 

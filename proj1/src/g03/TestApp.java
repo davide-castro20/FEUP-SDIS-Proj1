@@ -20,19 +20,18 @@ public class TestApp {
             String operation = args[1];
             if (operation.equalsIgnoreCase("BACKUP")) {
                 stub.backup(args[2], Integer.parseInt(args[3]));
-            } else {
-
+            } else if (operation.equalsIgnoreCase("RESTORE")) {
+                stub.restore(args[2]);
+            } else if (operation.equalsIgnoreCase("DELETE")) {
+                stub.delete(args[2]);
+            } else if (operation.equalsIgnoreCase("RECLAIM")) {
+                stub.reclaim(Long.parseLong(args[2]));
+            } else if (operation.equalsIgnoreCase("STATE")) {
+                stub.state();
             }
-
-
-
-
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-
     }
 }

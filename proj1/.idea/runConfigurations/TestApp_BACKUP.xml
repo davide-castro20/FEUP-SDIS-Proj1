@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="TestApp" type="Application" factoryName="Application" nameIsGenerated="true">
+  <configuration default="false" name="TestApp BACKUP" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="g03.TestApp" />
     <module name="proj1" />
     <option name="PROGRAM_PARAMETERS" value="Peer1 BACKUP teste.txt 1" />

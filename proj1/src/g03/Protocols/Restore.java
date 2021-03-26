@@ -5,8 +5,9 @@ import g03.Message;
 import g03.MessageType;
 import g03.Peer;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Restore implements Runnable {
     private final Peer peer;
@@ -27,28 +28,22 @@ public class Restore implements Runnable {
         FileInfo file = this.peer.getFiles().get(path);
         String hash = file.getHash();
 
-        try (FileOutputStream out = new FileOutputStream(path + "-restored")) {
+        this.peer.getChunksToRestore().put(hash, IntStream.range(0, file.getChunkAmount()).boxed().collect(Collectors.toList()));
 
-            for (int i = 0; i < file.getChunkAmount(); i++) {
-                String[] msgArgs = {this.peer.getProtocolVersion(),
-                        String.valueOf(this.peer.getId()),
-                        hash,
-                        String.valueOf(i)};
+        for (int i = 0; i < file.getChunkAmount(); i++) {
+            String[] msgArgs = {this.peer.getProtocolVersion(),
+                    String.valueOf(this.peer.getId()),
+                    hash,
+                    String.valueOf(i)};
 
-                Message msgToSend = new Message(MessageType.GETCHUNK, msgArgs, null);
+            Message msgToSend = new Message(MessageType.GETCHUNK, msgArgs, null);
 
-                try {
-                    this.peer.getMC().send(msgToSend);
-                    Message message = new Message(this.peer.getMDR().receive());
-                    out.write(message.getBody());
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
+            try {
+                this.peer.getMC().send(msgToSend);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
         }
     }
 }

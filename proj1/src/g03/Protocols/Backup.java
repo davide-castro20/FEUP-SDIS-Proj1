@@ -3,7 +3,6 @@ package g03.Protocols;
 import g03.*;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 
 public class Backup implements Runnable {
     private final Peer peer;
@@ -18,6 +17,9 @@ public class Backup implements Runnable {
 
     @Override
     public void run() {
+
+        //TODO: Verificar tamanho (max 64 GB)
+
         String hash = Peer.getFileIdString(path);
         String[] msgArgs = {this.peer.getProtocolVersion(),
                 String.valueOf(this.peer.getId()),
@@ -25,7 +27,6 @@ public class Backup implements Runnable {
                 "0", // CHUNK NO
                 String.valueOf(replicationDegree)};
 
-        //TODO: Last chunk with 0 bytes
         byte[] data;
         int nRead = -1;
         int nChunk = 0;
@@ -34,13 +35,21 @@ public class Backup implements Runnable {
                 data = new byte[64000];
                 nRead = file.read(data, 0, 64000);
                 System.out.println(nRead);
-                if (nRead < 64000) nRead = 0;
+                Message msgToSend;
+                if (nRead < 64000) {
+                    byte[] dataToSend = new byte[nRead];
+                    System.arraycopy(data, 0, dataToSend, 0, nRead);
+                    msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, dataToSend);
+                    nRead = 0; // Used to terminate the loop if the the last chunk doesn't have 64 KB
+                } else {
+                    msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
+                }
                 msgArgs[3] = String.valueOf(nChunk); // set chunk number
                 nChunk++;
-                Message msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
-                this.peer.getPool().execute(new PutChunkMessageSender(this.peer, msgToSend, replicationDegree, 5));
+                this.peer.getPool().execute(new PutChunkMessageSender(this.peer, msgToSend, replicationDegree, 5)); //TODO: Verificar chunk mandados intercaladamente
             }
 
+            //TODO: Maybe wait for threads
             if (!this.peer.getFiles().containsKey(path)) {
                 this.peer.getFiles().put(path, new FileInfo(path, hash, replicationDegree, nChunk));
             }
