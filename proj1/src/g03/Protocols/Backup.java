@@ -1,9 +1,6 @@
 package g03.Protocols;
 
-import g03.FileInfo;
-import g03.Message;
-import g03.MessageType;
-import g03.Peer;
+import g03.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -41,22 +38,7 @@ public class Backup implements Runnable {
                 msgArgs[3] = String.valueOf(nChunk); // set chunk number
                 nChunk++;
                 Message msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
-                try {
-                    int actualRepDegree = 0;
-                    int maxIterations = 5;
-                    int currentIteration = 1;
-                    while (actualRepDegree < replicationDegree || currentIteration < maxIterations) {
-                        this.peer.getMDB().send(msgToSend);
-                        Thread.sleep(1000L * currentIteration);
-                        if (this.peer.getChunks().containsKey(msgArgs[2] + "" + msgArgs[3])) {
-                            actualRepDegree = this.peer.getChunks().get(msgArgs[2] + "" + msgArgs[3]).getPerceivedReplicationDegree();
-                        }
-                        currentIteration++;
-                    }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                this.peer.getPool().execute(new PutChunkMessageSender(this.peer, msgToSend, replicationDegree, 5));
             }
 
             if (!this.peer.getFiles().containsKey(path)) {

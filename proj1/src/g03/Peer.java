@@ -1,5 +1,8 @@
 package g03;
 
+import g03.ChannelRunnables.MC;
+import g03.ChannelRunnables.MDB;
+import g03.ChannelRunnables.MDR;
 import g03.Protocols.*;
 
 import java.io.*;
@@ -26,7 +29,9 @@ public class Peer implements PeerStub {
     ConcurrentMap<String, Chunk> storedChunks;
     ConcurrentMap<String, FileInfo> files; // FilePath -> FileInfo
 
-    ExecutorService pool;
+    ConcurrentMap<String, ScheduledFuture<?>> messagesToSend;
+
+    ScheduledExecutorService pool;
     ScheduledExecutorService synchronizer;
 
 
@@ -53,98 +58,9 @@ public class Peer implements PeerStub {
 
         peer.synchronizer.scheduleAtFixedRate(new Synchronizer(peer), 0, 30, TimeUnit.SECONDS);
 
-        Thread MCthread = new Thread(() -> {
-            while (true) {
-                try {
-                    Message message = new Message(MCchannel.receive());
-                    if (message.type == MessageType.STORED) {
-                        String key = message.fileId + "-" + message.chunkNumber;
-
-                        if(peer.storedChunks.containsKey(key)) {
-                            Chunk c = peer.storedChunks.get(key);
-                            c.getPeers().add(message.getSenderId());
-                        }
-
-                    } else if (message.type == MessageType.GETCHUNK) {
-                        String key = message.fileId + "-" + message.chunkNumber;
-                        if (peer.storedChunks.containsKey(key)) {
-                            String[] msgArgs = {peer.protocolVersion,
-                                    String.valueOf(peer.id),
-                                    message.fileId,
-                                    String.valueOf(message.chunkNumber)};
-
-                            byte[] body = null;
-                            try (FileInputStream file = new FileInputStream(key)) {
-                                body = file.readAllBytes();
-                            }
-
-                            Message msgToSend = new Message(MessageType.CHUNK, msgArgs, body);
-                            int timeToWait = new Random().nextInt(400);
-                            Thread.sleep(timeToWait);
-                            //TODO: falta parte de verificar se são recebidas chunk messages antes de enviar
-                            // (usar a thread pool)
-
-                            peer.MDRChannel.send(msgToSend);
-                        }
-                    } else if(message.type == MessageType.DELETE) {
-                        peer.storedChunks.forEach((key, value) -> {
-                            if(key.startsWith(message.fileId) && peer.storedChunks.remove(key, value)) {
-                                File chunkToDelete = new File(key);
-                                chunkToDelete.delete();
-                            }
-                        });
-                    } else if(message.type == MessageType.REMOVED) {
-                        String key = message.fileId + "-" + message.chunkNumber;
-                        if(peer.storedChunks.containsKey(key)) {
-                            peer.storedChunks.get(key).getPeers().remove(message.getSenderId());
-                        }
-                        //TODO: check if replication degree drops below desired
-                    }
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-
-        });
-
-        Thread MDBthread = new Thread(() -> {
-            while (true) {
-                try {
-                    Message m = new Message(MDBchannel.receive());
-                    if (m.senderId != peer.id) {
-                        peer.receive(m);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-        });
-
-        MCthread.start();
-        MDBthread.start();
-
-        System.out.println(Peer.getFileIdString("davinki.mp3"));
-//        if (peer.id == 1) {
-//            peer.backup("davinki.mp3", 1);
-//        }
-
-//        if (peer.id == 2) {
-//            byte[] received;
-//            while ((received = peer.MDBChannel.receive()) != null) {
-//                byte[] finalReceived = received;
-//                new Thread(() -> {
-//                    try {
-//                        peer.receive(finalReceived);
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }).start();
-//
-//            }
-//        }
-
+        new Thread(new MC(peer)).start();
+        new Thread(new MDR(peer)).start();
+        new Thread(new MDB(peer)).start();
 
     }
 
@@ -157,28 +73,27 @@ public class Peer implements PeerStub {
         this.MDRChannel = MDRChannel;
         this.storedChunks = new ConcurrentHashMap<>();
         this.files = new ConcurrentHashMap<>();
+        this.messagesToSend = new ConcurrentHashMap<>();
 
-        this.pool = Executors.newFixedThreadPool(16);
+        this.pool = Executors.newScheduledThreadPool(16);
         this.synchronizer = Executors.newSingleThreadScheduledExecutor();
 
         this.readChunkFileData();
     }
 
     private void readChunkFileData() {
-        try(FileInputStream fileInChunks = new FileInputStream("chunkData");
-            ObjectInputStream chunksIn = new ObjectInputStream(fileInChunks) )
-        {
+        try (FileInputStream fileInChunks = new FileInputStream("chunkData");
+             ObjectInputStream chunksIn = new ObjectInputStream(fileInChunks)) {
             this.storedChunks = (ConcurrentMap<String, Chunk>) chunksIn.readObject();
-
+        } catch (FileNotFoundException ignored) {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 
-        try(FileInputStream fileInFile = new FileInputStream("fileData");
-            ObjectInputStream filesIn = new ObjectInputStream(fileInFile) )
-        {
+        try (FileInputStream fileInFile = new FileInputStream("fileData");
+             ObjectInputStream filesIn = new ObjectInputStream(fileInFile)) {
             this.files = (ConcurrentMap<String, FileInfo>) filesIn.readObject();
-
+        } catch (FileNotFoundException ignored) {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -193,7 +108,7 @@ public class Peer implements PeerStub {
     }
 
     public void receive(Message message) throws IOException {
-        Receive receiveRun = new Receive(this, message);
+        ReceiveChunk receiveRun = new ReceiveChunk(this, message);
         pool.execute(receiveRun);
     }
 
@@ -241,7 +156,6 @@ public class Peer implements PeerStub {
         }
 
 
-
         return result.toString();
     }
 
@@ -271,6 +185,14 @@ public class Peer implements PeerStub {
 
     public ConcurrentMap<String, FileInfo> getFiles() {
         return files;
+    }
+
+    public ConcurrentMap<String, ScheduledFuture<?>> getMessagesToSend() {
+        return messagesToSend;
+    }
+
+    public ScheduledExecutorService getPool() {
+        return pool;
     }
 }
 

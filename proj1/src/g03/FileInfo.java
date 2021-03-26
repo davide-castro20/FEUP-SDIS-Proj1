@@ -1,6 +1,8 @@
 package g03;
 
-public class FileInfo {
+import java.io.Serializable;
+
+public class FileInfo implements Serializable {
 
     private String path;
     private String hash;

@@ -1,9 +1,10 @@
 package g03;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Chunk {
+public class Chunk implements Serializable {
 
     String fileId;
     int chunkNumber;

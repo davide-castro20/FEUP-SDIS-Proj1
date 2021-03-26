@@ -8,12 +8,13 @@ import g03.Peer;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
-public class Receive implements Runnable {
+public class ReceiveChunk implements Runnable {
     private final Peer peer;
     private final Message message;
 
-    public Receive(Peer peer, Message message) {
+    public ReceiveChunk(Peer peer, Message message) {
         this.peer = peer;
         this.message = message;
     }
@@ -22,11 +23,8 @@ public class Receive implements Runnable {
     @Override
     public void run() {
 
-        try {
-            FileOutputStream out = new FileOutputStream(message.getFileId() + "-" + message.getChunkNumber());
+        try (FileOutputStream out = new FileOutputStream(message.getFileId() + "-" + message.getChunkNumber())) {
             out.write(message.getBody());
-            out.close();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -42,15 +40,15 @@ public class Receive implements Runnable {
                         String.valueOf(message.getChunkNumber())},
                 null);
 
-        Random random = new Random();
-        try {
-            Thread.sleep(random.nextInt(400));
+        //Refactor
+        peer.getPool().schedule(() -> {
+            try {
+                this.peer.getMC().send(reply);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }, new Random().nextInt(400), TimeUnit.MILLISECONDS);
 
-            this.peer.getMC().send(reply);
-
-        } catch (InterruptedException | IOException e) {
-            e.printStackTrace();
-        }
 
     }
 }
