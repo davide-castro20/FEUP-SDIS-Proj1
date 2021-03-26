@@ -1,24 +1,24 @@
 package g03;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Chunk {
 
     String fileId;
     int chunkNumber;
     int desiredReplicationDegree;
-    int perceivedReplicationDegree;
+    Set<Integer> peers;
 
-    public Chunk(String fileId, int chunkNumber, int perceivedReplicationDegree, int desiredReplicationDegree) {
+    public Chunk(String fileId, int chunkNumber, int desiredReplicationDegree) {
         this.fileId = fileId;
         this.chunkNumber = chunkNumber;
         this.desiredReplicationDegree = desiredReplicationDegree;
-        this.perceivedReplicationDegree = perceivedReplicationDegree;
+        this.peers = ConcurrentHashMap.newKeySet();
     }
 
     public int getPerceivedReplicationDegree() {
-        return this.perceivedReplicationDegree;
+        return this.peers.size() + 1;
     }
 
 
@@ -32,5 +32,9 @@ public class Chunk {
 
     public int getDesiredReplicationDegree() {
         return desiredReplicationDegree;
+    }
+
+    public Set<Integer> getPeers() {
+        return peers;
     }
 }

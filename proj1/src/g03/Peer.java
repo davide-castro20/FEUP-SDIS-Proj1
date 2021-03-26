@@ -27,6 +27,7 @@ public class Peer implements PeerStub {
     ConcurrentMap<String, FileInfo> files; // FilePath -> FileInfo
 
     ExecutorService pool;
+    ScheduledExecutorService synchronizer;
 
 
     public static void main(String[] args) throws IOException, AlreadyBoundException {
@@ -50,13 +51,20 @@ public class Peer implements PeerStub {
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
         peer.bindRMI();
 
+        peer.synchronizer.scheduleAtFixedRate(new Synchronizer(peer), 0, 30, TimeUnit.SECONDS);
+
         Thread MCthread = new Thread(() -> {
             while (true) {
                 try {
                     Message message = new Message(MCchannel.receive());
                     if (message.type == MessageType.STORED) {
                         String key = message.fileId + "-" + message.chunkNumber;
-                        Chunk c = peer.storedChunks.get(key);
+
+                        if(peer.storedChunks.containsKey(key)) {
+                            Chunk c = peer.storedChunks.get(key);
+                            c.getPeers().add(message.getSenderId());
+                        }
+
                     } else if (message.type == MessageType.GETCHUNK) {
                         String key = message.fileId + "-" + message.chunkNumber;
                         if (peer.storedChunks.containsKey(key)) {
@@ -85,11 +93,18 @@ public class Peer implements PeerStub {
                                 chunkToDelete.delete();
                             }
                         });
+                    } else if(message.type == MessageType.REMOVED) {
+                        String key = message.fileId + "-" + message.chunkNumber;
+                        if(peer.storedChunks.containsKey(key)) {
+                            peer.storedChunks.get(key).getPeers().remove(message.getSenderId());
+                        }
+                        //TODO: check if replication degree drops below desired
                     }
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+
 
         });
 
@@ -144,6 +159,29 @@ public class Peer implements PeerStub {
         this.files = new ConcurrentHashMap<>();
 
         this.pool = Executors.newFixedThreadPool(16);
+        this.synchronizer = Executors.newSingleThreadScheduledExecutor();
+
+        this.readChunkFileData();
+    }
+
+    private void readChunkFileData() {
+        try(FileInputStream fileInChunks = new FileInputStream("chunkData");
+            ObjectInputStream chunksIn = new ObjectInputStream(fileInChunks) )
+        {
+            this.storedChunks = (ConcurrentMap<String, Chunk>) chunksIn.readObject();
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        try(FileInputStream fileInFile = new FileInputStream("fileData");
+            ObjectInputStream filesIn = new ObjectInputStream(fileInFile) )
+        {
+            this.files = (ConcurrentMap<String, FileInfo>) filesIn.readObject();
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public void bindRMI() throws RemoteException, AlreadyBoundException {

@@ -31,7 +31,8 @@ public class Receive implements Runnable {
             e.printStackTrace();
         }
 
-        Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), 0, message.getReplicationDegree());
+        Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
+
         this.peer.getChunks().put(message.getFileId() + "-" + message.getChunkNumber(), c);
 
         Message reply = new Message(MessageType.STORED,
