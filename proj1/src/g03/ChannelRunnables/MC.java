@@ -63,11 +63,20 @@ public class MC implements Runnable {
                     String key = message.getFileId() + "-" + message.getChunkNumber();
                     if (peer.getChunks().containsKey(key)) {
                         peer.getChunks().get(key).getPeers().remove(message.getSenderId());
-                    }
 
-                    //TODO: check if replication degree drops below desired
-                    if(peer.getChunks().get(key).getPerceivedReplicationDegree() < peer.getChunks().get(key).getDesiredReplicationDegree()) {
 
+                        //TODO: check if replication degree drops below desired (Kinda done)
+                        if (peer.getChunks().get(key).getPerceivedReplicationDegree() < peer.getChunks().get(key).getDesiredReplicationDegree()) {
+                            String[] msgArgs = {peer.getProtocolVersion(),
+                                    String.valueOf(peer.getId()),
+                                    message.getFileId(),
+                                    String.valueOf(message.getChunkNumber())};
+                            Message msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, null);
+                            ScheduledFuture<?> task = peer.getPool().schedule(
+                                    new PutChunkMessageSender(peer, msgToSend, peer.getChunks().get(key).getDesiredReplicationDegree(), 5),
+                                    new Random().nextInt(400), TimeUnit.MILLISECONDS);
+                            peer.getBackupsToSend().put(key, task);
+                        }
                     }
                 }
             } catch (IOException e) {

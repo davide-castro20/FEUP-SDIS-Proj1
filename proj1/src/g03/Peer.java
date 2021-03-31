@@ -30,6 +30,7 @@ public class Peer implements PeerStub {
     ConcurrentMap<String, FileInfo> files; // FilePath -> FileInfo
 
     ConcurrentMap<String, ScheduledFuture<?>> messagesToSend;
+    ConcurrentMap<String, ScheduledFuture<?>> backupsToSend; //FOR THE RECLAIM PROTOCOL
     ConcurrentMap<String, List<Integer>> chunksToRestore;
 
     ScheduledExecutorService pool;
@@ -213,6 +214,10 @@ public class Peer implements PeerStub {
         }
 
         return currentSpace/1000.0; //returns in kbytes
+    }
+
+    public ConcurrentMap<String, ScheduledFuture<?>> getBackupsToSend() {
+        return backupsToSend;
     }
 }
 

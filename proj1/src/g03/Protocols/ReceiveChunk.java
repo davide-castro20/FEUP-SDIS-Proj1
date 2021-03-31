@@ -24,17 +24,24 @@ public class ReceiveChunk implements Runnable {
 
     @Override
     public void run() {
-        long chunkSize = 0;
+        String key = message.getFileId() + "-" + message.getChunkNumber();
+        if(!peer.getChunks().containsKey(key)) {
+            try (FileOutputStream out = new FileOutputStream(key)) {
+                out.write(message.getBody());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-        try (FileOutputStream out = new FileOutputStream(message.getFileId() + "-" + message.getChunkNumber())) {
-            out.write(message.getBody());
-        } catch (IOException e) {
-            e.printStackTrace();
+            Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
+
+            this.peer.getChunks().put(key, c);
         }
 
-        Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
-
-        this.peer.getChunks().put(message.getFileId() + "-" + message.getChunkNumber(), c);
+        //in case this peer is trying to backup this chunk (reclaim)
+        if(peer.getBackupsToSend().containsKey(key)) {
+            peer.getBackupsToSend().get(key).cancel(false);
+            peer.getBackupsToSend().remove(key);
+        }
 
         Message reply = new Message(MessageType.STORED,
                 new String[]{
