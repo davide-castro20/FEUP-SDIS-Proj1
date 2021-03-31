@@ -5,8 +5,10 @@ import g03.Message;
 import g03.MessageType;
 import g03.Peer;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +24,7 @@ public class ReceiveChunk implements Runnable {
 
     @Override
     public void run() {
+        long chunkSize = 0;
 
         try (FileOutputStream out = new FileOutputStream(message.getFileId() + "-" + message.getChunkNumber())) {
             out.write(message.getBody());

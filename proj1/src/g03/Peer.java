@@ -30,12 +30,12 @@ public class Peer implements PeerStub {
     ConcurrentMap<String, FileInfo> files; // FilePath -> FileInfo
 
     ConcurrentMap<String, ScheduledFuture<?>> messagesToSend;
-
     ConcurrentMap<String, List<Integer>> chunksToRestore;
 
     ScheduledExecutorService pool;
     ScheduledExecutorService synchronizer;
 
+    long maxSpace = 100000;
 
     public static void main(String[] args) throws IOException, AlreadyBoundException {
         if (args.length != 6) {
@@ -137,7 +137,8 @@ public class Peer implements PeerStub {
 
     @Override
     public void reclaim(long amountOfBytes) throws RemoteException {
-
+        Reclaim reclaimRun = new Reclaim(this, amountOfBytes);
+        pool.execute(reclaimRun);
     }
 
     @Override
@@ -202,6 +203,16 @@ public class Peer implements PeerStub {
 
     public ConcurrentMap<String, List<Integer>> getChunksToRestore() {
         return chunksToRestore;
+    }
+
+    public double getCurrentSpace() {
+        double currentSpace = 0; //in bytes
+
+        for(Chunk chunk : storedChunks.values()) {
+            currentSpace += new File(chunk.getFileId() + "-" + chunk.getChunkNumber()).length();
+        }
+
+        return currentSpace/1000.0; //returns in kbytes
     }
 }
 

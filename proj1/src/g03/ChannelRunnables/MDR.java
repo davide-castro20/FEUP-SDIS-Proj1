@@ -1,6 +1,7 @@
 package g03.ChannelRunnables;
 
 import g03.Message;
+import g03.MessageType;
 import g03.Peer;
 
 import java.io.FileInputStream;
@@ -20,7 +21,7 @@ public class MDR implements Runnable {
         while (true) {
             try {
                 Message m = new Message(peer.getMDR().receive());
-                if (m.getSenderId() != peer.getId()) {
+                if (m.getSenderId() != peer.getId() && m.getType() == MessageType.CHUNK) {
                     if (peer.getChunksToRestore().containsKey(m.getFileId())) {
                         if (peer.getChunksToRestore().get(m.getFileId()).contains(m.getChunkNumber())) {
                             //TODO: usar nio?

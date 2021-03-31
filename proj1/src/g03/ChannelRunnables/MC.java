@@ -28,7 +28,7 @@ public class MC implements Runnable {
                     if (peer.getChunks().containsKey(key)) {
                         Chunk c = peer.getChunks().get(key);
                         c.getPeers().add(message.getSenderId());
-                    } else {
+                    } else { //IDK what this else means
                         Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
                         peer.getChunks().put(key, c);
                     }
@@ -64,7 +64,11 @@ public class MC implements Runnable {
                     if (peer.getChunks().containsKey(key)) {
                         peer.getChunks().get(key).getPeers().remove(message.getSenderId());
                     }
+
                     //TODO: check if replication degree drops below desired
+                    if(peer.getChunks().get(key).getPerceivedReplicationDegree() < peer.getChunks().get(key).getDesiredReplicationDegree()) {
+
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
