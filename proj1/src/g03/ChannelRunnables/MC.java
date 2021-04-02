@@ -24,9 +24,10 @@ public class MC implements Runnable {
             try {
                 Message message = new Message(peer.getMC().receive());
                 //TODO: refactor - maybe change this to runnable classes
+                Runnable run = null;
                 switch(message.getType()) {
                     case STORED:
-                        new Thread(() -> {
+                         run = () -> {
                             String key = message.getFileId() + "-" + message.getChunkNumber();
 
                             if (peer.getChunks().containsKey(key)) {
@@ -36,11 +37,11 @@ public class MC implements Runnable {
                                 Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
                                 peer.getChunks().put(key, c);
                             }
-                        }).start();
+                        };
                         break;
 
                     case GETCHUNK:
-                        new Thread(() -> {
+                        run = () -> {
                             String key = message.getFileId() + "-" + message.getChunkNumber();
                             if (peer.getChunks().containsKey(key)) {
                                 String[] msgArgs = {peer.getProtocolVersion(),
@@ -61,20 +62,22 @@ public class MC implements Runnable {
                                 ScheduledFuture<?> task = peer.getPool().schedule(new ChunkMessageSender(peer, msgToSend), new Random().nextInt(400), TimeUnit.MILLISECONDS);
                                 peer.getMessagesToSend().put(key, task);
                             }
-                        }).start();
+                        };
                         break;
 
                     case DELETE:
-                        new Thread(() -> peer.getChunks().forEach((key, value) -> {
-                            if (key.startsWith(message.getFileId()) && peer.getChunks().remove(key, value)) {
-                                File chunkToDelete = new File(key);
-                                chunkToDelete.delete();
-                            }
-                        })).start();
+                        run = () -> {
+                            peer.getChunks().forEach((key, value) -> {
+                                if (key.startsWith(message.getFileId()) && peer.getChunks().remove(key, value)) {
+                                    File chunkToDelete = new File(key);
+                                    chunkToDelete.delete();
+                                }
+                            });
+                        };
                         break;
 
                     case REMOVED:
-                        new Thread(() -> {
+                        run = () -> {
                             String key = message.getFileId() + "-" + message.getChunkNumber();
                             if (peer.getChunks().containsKey(key)) {
                                 peer.getChunks().get(key).getPeers().remove(message.getSenderId());
@@ -93,10 +96,14 @@ public class MC implements Runnable {
                                     peer.getBackupsToSend().put(key, task);
                                 }
                             }
-                        }).start();
+                        };
                         break;
-
+                    default:
+                        break;
                 }
+                if(run != null)
+                    peer.getPool().execute(run);
+
 //                if (message.getType() == MessageType.STORED) {
 //                    String key = message.getFileId() + "-" + message.getChunkNumber();
 //

@@ -2,6 +2,7 @@ package g03.Protocols;
 
 import g03.*;
 
+import java.io.File;
 import java.io.FileInputStream;
 
 public class Backup implements Runnable {
@@ -19,6 +20,12 @@ public class Backup implements Runnable {
     public void run() {
 
         //TODO: Verificar tamanho (max 64 GB)
+        File fileToBackup = new File(path);
+        if(!fileToBackup.exists() || fileToBackup.isDirectory())
+            return;
+        if (fileToBackup.length() > 64000000000L) {
+
+        }
 
         String hash = Peer.getFileIdString(path);
         String[] msgArgs = {this.peer.getProtocolVersion(),
@@ -34,6 +41,8 @@ public class Backup implements Runnable {
             while (nRead != 0) {
                 data = new byte[64000];
                 nRead = file.read(data, 0, 64000);
+                if(nRead == -1)
+                    nRead = 0;
                 System.out.println(nRead);
                 Message msgToSend;
                 if (nRead < 64000) {

@@ -36,7 +36,8 @@ public class Peer implements PeerStub {
     ScheduledExecutorService pool;
     ScheduledExecutorService synchronizer;
 
-    long maxSpace = 100000;
+    long maxSpace = 100000000000L; // bytes
+    long currentSpace = 0; // bytes
 
     public static void main(String[] args) throws IOException, AlreadyBoundException {
         if (args.length != 6) {
@@ -90,7 +91,7 @@ public class Peer implements PeerStub {
     private void readChunkFileData() {
         try (FileInputStream fileInChunks = new FileInputStream("chunkData");
              ObjectInputStream chunksIn = new ObjectInputStream(fileInChunks)) {
-            this.storedChunks = (ConcurrentMap<String, Chunk>) chunksIn.readObject();
+            this.storedChunks = (ConcurrentMap) chunksIn.readObject();
         } catch (FileNotFoundException ignored) {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -98,7 +99,7 @@ public class Peer implements PeerStub {
 
         try (FileInputStream fileInFile = new FileInputStream("fileData");
              ObjectInputStream filesIn = new ObjectInputStream(fileInFile)) {
-            this.files = (ConcurrentMap<String, FileInfo>) filesIn.readObject();
+            this.files = (ConcurrentMap) filesIn.readObject();
         } catch (FileNotFoundException ignored) {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -137,8 +138,8 @@ public class Peer implements PeerStub {
     }
 
     @Override
-    public void reclaim(long amountOfBytes) throws RemoteException {
-        Reclaim reclaimRun = new Reclaim(this, amountOfBytes);
+    public void reclaim(long amountOfKBytes) throws RemoteException {
+        Reclaim reclaimRun = new Reclaim(this, amountOfKBytes * 1000);
         pool.execute(reclaimRun);
     }
 
@@ -206,15 +207,11 @@ public class Peer implements PeerStub {
         return chunksToRestore;
     }
 
-    public double getCurrentSpace() {
-        double currentSpace = 0; //in bytes
+    public long getCurrentSpace() { return currentSpace; } // bytes
 
-        for(Chunk chunk : storedChunks.values()) {
-            currentSpace += new File(chunk.getFileId() + "-" + chunk.getChunkNumber()).length();
-        }
+    public long getMaxSpace() { return maxSpace; } // in bytes
 
-        return currentSpace/1000.0; //returns in kbytes
-    }
+    public double getRemainingSpace() { return maxSpace - currentSpace; }; // in bytes
 
     public ConcurrentMap<String, ScheduledFuture<?>> getBackupsToSend() {
         return backupsToSend;

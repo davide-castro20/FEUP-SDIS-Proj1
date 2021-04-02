@@ -24,7 +24,8 @@ public class MDR implements Runnable {
                 Message m = new Message(peer.getMDR().receive());
                 if (m.getSenderId() != peer.getId() && m.getType() == MessageType.CHUNK) {
                     //TODO: maybe refactor this
-                    new Thread(() -> {
+                    Runnable run = null;
+                    run = () -> {
                         try {
                             if (peer.getChunksToRestore().containsKey(m.getFileId())) {
                                 if (peer.getChunksToRestore().get(m.getFileId()).contains(m.getChunkNumber())) {
@@ -59,7 +60,8 @@ public class MDR implements Runnable {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    }).start();
+                    };
+                    peer.getPool().execute(run);
                 }
             } catch (IOException e) {
                 e.printStackTrace();

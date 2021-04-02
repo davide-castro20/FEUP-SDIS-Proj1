@@ -11,7 +11,7 @@ public class Message {
     byte[] body;
 
     public Message(byte[] packet) {
-        String[] message = new String(packet).split("[\r\n]2*");
+        String[] message = new String(packet).split("\r\n\r\n");
         String[] header = message[0].split("[ ]");
 
         this.protocolVersion = header[0];
