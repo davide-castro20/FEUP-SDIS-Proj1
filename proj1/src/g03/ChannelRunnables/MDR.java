@@ -1,13 +1,12 @@
 package g03.ChannelRunnables;
 
+import g03.FileInfo;
 import g03.Message;
 import g03.MessageType;
 import g03.Peer;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.util.Arrays;
 
 public class MDR implements Runnable {
 
@@ -27,6 +26,7 @@ public class MDR implements Runnable {
                     Runnable run = null;
                     run = () -> {
                         try {
+                            System.out.println("CHUNK NUMBER: " + m.getChunkNumber());
                             if (peer.getChunksToRestore().containsKey(m.getFileId())) {
                                 if (peer.getChunksToRestore().get(m.getFileId()).contains(m.getChunkNumber())) {
                                     //TODO: usar nio?
@@ -35,12 +35,20 @@ public class MDR implements Runnable {
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
-                                    peer.getChunksToRestore().get(m.getFileId()).remove(m.getChunkNumber());
+                                    peer.getChunksToRestore().get(m.getFileId()).remove(Integer.valueOf(m.getChunkNumber()));
                                     if (peer.getChunksToRestore().get(m.getFileId()).size() == 0) {
-                                        try (FileOutputStream out = new FileOutputStream(peer.getFiles().get(m.getFileId()).getPath() + "-restored")) {
-                                            for (int i = 0; i < peer.getFiles().get(m.getFileId()).getChunkAmount(); i++) {
+                                        System.out.println("ASSEMBLING FILE");
+                                        FileInfo fileInfo = peer.getFiles().values().stream().filter(f -> f.getHash().equals(m.getFileId())).findFirst().get();
+
+                                        System.out.println(fileInfo.getPath() + "-restored");
+                                        try (FileOutputStream out = new FileOutputStream(fileInfo.getPath() + "-restored")) {
+                                            for (int i = 0; i < fileInfo.getChunkAmount(); i++) {
+                                                System.out.println(m.getFileId() + "-" + i);
                                                 try (FileInputStream in = new FileInputStream(m.getFileId() + "-" + i)) {
                                                     in.transferTo(out);
+                                                    in.close();
+                                                    File chunk = new File(m.getFileId() + "-" + i);
+                                                    chunk.delete();
                                                 }
                                             }
 
@@ -57,7 +65,7 @@ public class MDR implements Runnable {
                                     peer.getMessagesToSend().remove(key);
                                 }
                             }
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     };

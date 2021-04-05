@@ -59,9 +59,9 @@ public class Backup implements Runnable {
             }
 
             //TODO: Maybe wait for threads
-            if (!this.peer.getFiles().containsKey(path)) {
+//            if (!this.peer.getFiles().containsKey(path)) {
                 this.peer.getFiles().put(path, new FileInfo(path, hash, replicationDegree, nChunk));
-            }
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }

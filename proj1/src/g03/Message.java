@@ -16,7 +16,7 @@ public class Message {
         String packetStr = new String(packet);
         String[] message = packetStr.split("\r\n\r\n");
         String[] header = message[0].split(" ");
-        
+
         this.protocolVersion = header[0];
         this.type = MessageType.valueOf(header[1]);
         this.senderId = Integer.parseInt(header[2]);

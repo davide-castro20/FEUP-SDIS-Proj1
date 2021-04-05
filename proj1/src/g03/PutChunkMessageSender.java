@@ -30,8 +30,6 @@ public class PutChunkMessageSender implements Runnable {
                 actualRepDegree = this.peer.getChunks().get(key).getPerceivedReplicationDegree();
             }
             if (currentIteration < maxIterations && actualRepDegree < desiredReplicationDegree) {
-                System.out.println("SENDING PUTCHUNK SIZE:");
-                System.out.println(message.getBody().length);
                 this.peer.getMDB().send(message);
                 this.peer.getPool().schedule(this, (int)Math.pow(2, currentIteration), TimeUnit.SECONDS);
             }

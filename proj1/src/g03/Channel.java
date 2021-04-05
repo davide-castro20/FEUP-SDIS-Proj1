@@ -29,7 +29,6 @@ public class Channel {
         byte[] mrbuf = new byte[65000];
         DatagramPacket packet = new DatagramPacket(mrbuf, mrbuf.length);
         this.socket.receive(packet);
-        System.out.println(packet.getLength());
         return Arrays.copyOf(mrbuf, packet.getLength());
     }
 }
