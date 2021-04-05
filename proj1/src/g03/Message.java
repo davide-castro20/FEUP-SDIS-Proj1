@@ -41,12 +41,12 @@ public class Message {
         this.fileId = args[2];
         this.body = body;
 
-        switch (type) {
-            case PUTCHUNK -> {
-                this.chunkNumber = Integer.parseInt(args[3]);
-                this.replicationDegree = Integer.parseInt(args[4]);
-            }
-            case STORED, CHUNK, GETCHUNK, REMOVED -> this.chunkNumber = Integer.parseInt(args[3]);
+        if(type == MessageType.PUTCHUNK) {
+            this.chunkNumber = Integer.parseInt(args[3]);
+            this.replicationDegree = Integer.parseInt(args[4]);
+
+        } else if(type != MessageType.DELETE) {
+            this.chunkNumber = Integer.parseInt(args[3]);
         }
     }
 

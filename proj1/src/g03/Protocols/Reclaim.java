@@ -20,12 +20,10 @@ public class Reclaim implements Runnable {
 
     @Override
     public void run() {
-        System.out.println(space);
-        System.out.println(peer.getCurrentSpace());
-
         peer.getChunks().entrySet().stream().sorted(Map.Entry.comparingByValue())
                 .takeWhile(m -> peer.getCurrentSpace() > space)
                 .forEach(this::removeChunk);
+        peer.setMaxSpace(space);
     }
 
     private void removeChunk(Map.Entry<String, Chunk> stringChunkEntry) {
@@ -35,16 +33,23 @@ public class Reclaim implements Runnable {
                 String.valueOf(stringChunkEntry.getValue().getChunkNumber())};
         Message msgToSend = new Message(MessageType.REMOVED, msgArgs, null);
 
-        File fileToRemove = new File(stringChunkEntry.getValue().getFileId() + "-"
-                + stringChunkEntry.getValue().getChunkNumber());
+        String chunkName = stringChunkEntry.getValue().getFileId() + "-"
+                + stringChunkEntry.getValue().getChunkNumber();
 
-        if(fileToRemove.delete()) {
-            peer.getChunks().remove(stringChunkEntry.getKey());
-            try {
-                peer.getMC().send(msgToSend);
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            File fileToRemove = new File(chunkName);
+
+            if (fileToRemove.delete()) {
+                System.out.println("DELETED " + chunkName);
+                peer.getChunks().remove(stringChunkEntry.getKey());
+                try {
+                    peer.getMC().send(msgToSend);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

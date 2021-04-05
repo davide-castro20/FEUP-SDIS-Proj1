@@ -80,6 +80,7 @@ public class Peer implements PeerStub {
         this.storedChunks = new ConcurrentHashMap<>();
         this.files = new ConcurrentHashMap<>();
         this.messagesToSend = new ConcurrentHashMap<>();
+        this.backupsToSend = new ConcurrentHashMap<>();
         this.chunksToRestore = new ConcurrentHashMap<>();
 
         this.pool = Executors.newScheduledThreadPool(16);
@@ -209,7 +210,11 @@ public class Peer implements PeerStub {
 
     public long getCurrentSpace() { return currentSpace; } // bytes
 
+    public long addSpace(long space) { currentSpace += space; return currentSpace; }
+
     public long getMaxSpace() { return maxSpace; } // in bytes
+
+    public void setMaxSpace(long maxSpace) { this.maxSpace = maxSpace; }
 
     public double getRemainingSpace() { return maxSpace - currentSpace; }; // in bytes
 

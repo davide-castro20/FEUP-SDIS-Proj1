@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -87,15 +88,37 @@ public class MC implements Runnable {
 
                                 //TODO: check if replication degree drops below desired (Kinda done)
                                 if (peer.getChunks().get(key).getPerceivedReplicationDegree() < peer.getChunks().get(key).getDesiredReplicationDegree()) {
-                                    String[] msgArgs = {peer.getProtocolVersion(),
-                                            String.valueOf(peer.getId()),
-                                            message.getFileId(),
-                                            String.valueOf(message.getChunkNumber())};
-                                    Message msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, null);
-                                    ScheduledFuture<?> task = peer.getPool().schedule(
-                                            new PutChunkMessageSender(peer, msgToSend, peer.getChunks().get(key).getDesiredReplicationDegree(), 5),
-                                            new Random().nextInt(400), TimeUnit.MILLISECONDS);
-                                    peer.getBackupsToSend().put(key, task);
+                                    System.out.println("CHUNK " + key + " replication degree dropped below desired");
+                                    byte[] data = new byte[64000];
+                                    Message msgToSend = null;
+                                    try {
+                                        System.out.println(peer.getId());
+                                        String[] msgArgs = {peer.getProtocolVersion(),
+                                                String.valueOf(peer.getId()),
+                                                message.getFileId(),
+                                                String.valueOf(message.getChunkNumber()),
+                                                String.valueOf(peer.getChunks().get(key).getDesiredReplicationDegree())};
+
+                                        try (FileInputStream fileIn = new FileInputStream(key)) {
+                                            int nRead = fileIn.read(data, 0, 64000);
+                                            data = Arrays.copyOf(data, nRead);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                        msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                    try {
+                                        System.out.println("SCHEDULING PUTCHUNK WITH " + data.length + " BYTES OF DATA");
+                                        ScheduledFuture<?> task = peer.getPool().schedule(
+                                                new PutChunkMessageSender(peer, msgToSend, peer.getChunks().get(key).getDesiredReplicationDegree(), 5),
+                                                new Random().nextInt(400), TimeUnit.MILLISECONDS);
+                                        peer.getBackupsToSend().put(key, task);
+                                        System.out.println(peer.getBackupsToSend().keySet().toString());
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                             }
                         };

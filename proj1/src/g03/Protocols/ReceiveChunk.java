@@ -29,6 +29,7 @@ public class ReceiveChunk implements Runnable {
 
             // will store if there is enough space in the peer
             if(peer.getRemainingSpace() >= message.getBody().length) {
+                peer.addSpace(message.getBody().length);
 
                 if(message.getBody().length > 0) {
                     try (FileOutputStream out = new FileOutputStream(key)) {
