@@ -45,6 +45,8 @@ public class Backup implements Runnable {
                     nRead = 0;
                 System.out.println(nRead);
                 Message msgToSend;
+                msgArgs[3] = String.valueOf(nChunk); // set chunk number
+                nChunk++;
                 if (nRead < 64000) {
                     byte[] dataToSend = new byte[nRead];
                     System.arraycopy(data, 0, dataToSend, 0, nRead);
@@ -53,9 +55,7 @@ public class Backup implements Runnable {
                 } else {
                     msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
                 }
-                msgArgs[3] = String.valueOf(nChunk); // set chunk number
-                nChunk++;
-                this.peer.getPool().execute(new PutChunkMessageSender(this.peer, msgToSend, replicationDegree, 5)); //TODO: Verificar chunk mandados intercaladamente
+                this.peer.getPool().execute(new PutChunkMessageSender(this.peer, msgToSend, replicationDegree, 5));
             }
 
             //TODO: Maybe wait for threads

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.Arrays;
 
 public class Channel {
 
@@ -26,7 +27,9 @@ public class Channel {
 
     public byte[] receive() throws IOException {
         byte[] mrbuf = new byte[65000];
-        this.socket.receive(new DatagramPacket(mrbuf, mrbuf.length));
-        return mrbuf;
+        DatagramPacket packet = new DatagramPacket(mrbuf, mrbuf.length);
+        this.socket.receive(packet);
+        System.out.println(packet.getLength());
+        return Arrays.copyOf(mrbuf, packet.getLength());
     }
 }

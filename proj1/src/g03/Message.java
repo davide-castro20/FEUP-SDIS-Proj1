@@ -1,5 +1,7 @@
 package g03;
 
+import java.util.Arrays;
+
 public class Message {
 
     String protocolVersion;
@@ -11,9 +13,10 @@ public class Message {
     byte[] body;
 
     public Message(byte[] packet) {
-        String[] message = new String(packet).split("\r\n\r\n");
-        String[] header = message[0].split("[ ]");
-
+        String packetStr = new String(packet);
+        String[] message = packetStr.split("\r\n\r\n");
+        String[] header = message[0].split(" ");
+        
         this.protocolVersion = header[0];
         this.type = MessageType.valueOf(header[1]);
         this.senderId = Integer.parseInt(header[2]);
@@ -22,16 +25,8 @@ public class Message {
         if(this.type == MessageType.PUTCHUNK)
             this.replicationDegree = Integer.parseInt(header[5]);
 
-        //Split returns an array with a lot of empty strings
-        boolean foundContent = false;
-        for (String s : message) {
-            if (!s.equals("")) {
-                this.body = s.replace("\u0000", "").getBytes();
-                foundContent = true;
-            }
-        }
-        if (!foundContent)
-            this.body = new byte[0];
+        int indexBody = packetStr.indexOf("\r\n\r\n");
+        this.body = Arrays.copyOfRange(packet, indexBody + 4, packet.length);
     }
 
     public Message(MessageType type, String[] args, byte[] body) {

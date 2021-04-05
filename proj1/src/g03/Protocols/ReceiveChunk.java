@@ -31,10 +31,19 @@ public class ReceiveChunk implements Runnable {
             if(peer.getRemainingSpace() >= message.getBody().length) {
                 System.out.println(message.getBody().length);
 
-                try (FileOutputStream out = new FileOutputStream(key)) {
-                    out.write(message.getBody());
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if(message.getBody().length > 0) {
+                    try (FileOutputStream out = new FileOutputStream(key)) {
+                        out.write(message.getBody());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    File file = new File(key);
+                    try {
+                        file.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
