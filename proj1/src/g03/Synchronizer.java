@@ -1,9 +1,8 @@
 package g03;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
+import java.io.*;
+import java.rmi.RemoteException;
+import java.util.Map;
 
 public class Synchronizer implements Runnable {
     Peer peer;
@@ -14,6 +13,21 @@ public class Synchronizer implements Runnable {
 
     @Override
     public void run() {
+        checkFiles();
+        writeChunkData();
+        writeFileData();
+    }
+
+    private void checkFiles() {
+        for(String path : peer.getFiles().keySet()) {
+            File file = new File(path);
+            if(!file.exists()) { //TODO: check if file is modified (create hash with metadata)
+                peer.delete(path);
+            }
+        }
+    }
+
+    private void writeChunkData() {
         try(FileOutputStream fileOutChunks = new FileOutputStream("chunkData");
             ObjectOutputStream outChunks = new ObjectOutputStream(fileOutChunks))
         {
@@ -22,7 +36,9 @@ public class Synchronizer implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    private void writeFileData() {
         try(FileOutputStream fileOutFiles = new FileOutputStream("fileData");
             ObjectOutputStream outFiles = new ObjectOutputStream(fileOutFiles))
         {
@@ -31,6 +47,5 @@ public class Synchronizer implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }

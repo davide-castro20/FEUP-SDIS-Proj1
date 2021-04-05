@@ -35,8 +35,6 @@ public class Delete implements Runnable {
         try {
             this.peer.getMC().send(deleteMsg);
 
-            File fileToRemove = new File(path);
-            fileToRemove.delete();
             this.peer.getFiles().remove(path);
 
         } catch (IOException e) {

@@ -1,0 +1,1 @@
+verificar se os ficheiros foram eliminados ou modificados (periodicamente ou ao iniciar o peer)

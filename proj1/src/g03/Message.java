@@ -21,12 +21,17 @@ public class Message {
         this.type = MessageType.valueOf(header[1]);
         this.senderId = Integer.parseInt(header[2]);
         this.fileId = header[3];
-        this.chunkNumber = Integer.parseInt(header[4]);
+
+        if(this.type != MessageType.DELETE)
+            this.chunkNumber = Integer.parseInt(header[4]);
         if(this.type == MessageType.PUTCHUNK)
             this.replicationDegree = Integer.parseInt(header[5]);
 
         int indexBody = packetStr.indexOf("\r\n\r\n");
-        this.body = Arrays.copyOfRange(packet, indexBody + 4, packet.length);
+        if(indexBody + 4 >= packet.length)
+            this.body = null;
+        else
+            this.body = Arrays.copyOfRange(packet, indexBody + 4, packet.length);
     }
 
     public Message(MessageType type, String[] args, byte[] body) {

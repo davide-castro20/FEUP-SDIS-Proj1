@@ -114,31 +114,31 @@ public class Peer implements PeerStub {
         registry.bind(this.serviceAccessPointName, stub);
     }
 
-    public void receive(Message message) throws IOException {
+    public void receive(Message message) {
         ReceiveChunk receiveRun = new ReceiveChunk(this, message);
         pool.execute(receiveRun);
     }
 
     @Override
-    public void backup(String path, int replicationDegree) throws RemoteException {
+    public void backup(String path, int replicationDegree) {
         Backup backupRun = new Backup(this, path, replicationDegree);
         pool.execute(backupRun);
     }
 
     @Override
-    public void restore(String path) throws RemoteException {
+    public void restore(String path) {
         Restore restoreRun = new Restore(this, path);
         pool.execute(restoreRun);
     }
 
     @Override
-    public void delete(String path) throws RemoteException {
+    public void delete(String path) {
         Delete deleteRun = new Delete(this, path);
         pool.execute(deleteRun);
     }
 
     @Override
-    public void reclaim(long amountOfKBytes) throws RemoteException {
+    public void reclaim(long amountOfKBytes) {
         Reclaim reclaimRun = new Reclaim(this, amountOfKBytes * 1000);
         pool.execute(reclaimRun);
     }
