@@ -29,11 +29,16 @@ public class PutChunkMessageSender implements Runnable {
             System.out.println("PUTCHUNK " + key);
             if (this.peer.getChunks().containsKey(key)) {
                 actualRepDegree = this.peer.getChunks().get(key).getPerceivedReplicationDegree();
+
+            } else if(this.peer.getSentChunksStatus().containsKey(message.getFileId())) { //peer that is sending the chunk has the original file
+                actualRepDegree = this.peer.getSentChunksStatus().get(message.getFileId()).get(message.getChunkNumber());
             }
             if (currentIteration < maxIterations && actualRepDegree < desiredReplicationDegree) {
                 System.out.println("SENDING ^");
                 this.peer.getMDB().send(message);
                 this.peer.getPool().schedule(this, (int)Math.pow(2, currentIteration), TimeUnit.SECONDS);
+            } else {
+                this.peer.getSentChunksStatus().get(message.getFileId()).set(message.getChunkNumber(), 0);
             }
 
         } catch (IOException e) {

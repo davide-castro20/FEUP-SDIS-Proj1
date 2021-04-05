@@ -1,9 +1,6 @@
 package g03.Protocols;
 
-import g03.Chunk;
-import g03.Message;
-import g03.MessageType;
-import g03.Peer;
+import g03.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 public class ReceiveChunk implements Runnable {
     private final Peer peer;
@@ -26,6 +24,11 @@ public class ReceiveChunk implements Runnable {
     public void run() {
         String key = message.getFileId() + "-" + message.getChunkNumber();
         if(!peer.getChunks().containsKey(key)) {
+
+            Stream<FileInfo> fileInThisPeer = peer.getFiles().values().stream().filter(f -> f.getHash().equals(message.getFileId()));
+            if(fileInThisPeer.count() > 0) {
+                return;
+            }
 
             // will store if there is enough space in the peer
             if(peer.getRemainingSpace() >= message.getBody().length) {
@@ -46,7 +49,7 @@ public class ReceiveChunk implements Runnable {
                     }
                 }
 
-                Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
+                Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree(), message.getBody().length);
 
                 this.peer.getChunks().put(key, c);
 

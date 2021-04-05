@@ -41,6 +41,7 @@ public class Reclaim implements Runnable {
 
             if (fileToRemove.delete()) {
                 System.out.println("DELETED " + chunkName);
+                peer.removeSpace(peer.getChunks().get(stringChunkEntry.getKey()).getSize());
                 peer.getChunks().remove(stringChunkEntry.getKey());
                 try {
                     peer.getMC().send(msgToSend);

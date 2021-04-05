@@ -4,6 +4,9 @@ import g03.*;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Backup implements Runnable {
     private final Peer peer;
@@ -24,7 +27,7 @@ public class Backup implements Runnable {
         if(!fileToBackup.exists() || fileToBackup.isDirectory())
             return;
         if (fileToBackup.length() > 64000000000L) {
-
+            return;
         }
 
         String hash = Peer.getFileIdString(path);
@@ -33,6 +36,8 @@ public class Backup implements Runnable {
                 hash,
                 "0", // CHUNK NO
                 String.valueOf(replicationDegree)};
+
+        this.peer.getSentChunksStatus().put(hash, new ArrayList<>());
 
         byte[] data;
         int nRead = -1;
@@ -46,6 +51,7 @@ public class Backup implements Runnable {
                 System.out.println(nRead);
                 Message msgToSend;
                 msgArgs[3] = String.valueOf(nChunk); // set chunk number
+                this.peer.getSentChunksStatus().get(hash).add(0);
                 nChunk++;
                 if (nRead < 64000) {
                     byte[] dataToSend = new byte[nRead];

@@ -11,12 +11,14 @@ public class Chunk implements Serializable, Comparable<Chunk> {
     int chunkNumber;
     int desiredReplicationDegree;
     Set<Integer> peers;
+    int size;
 
-    public Chunk(String fileId, int chunkNumber, int desiredReplicationDegree) {
+    public Chunk(String fileId, int chunkNumber, int desiredReplicationDegree, int size) {
         this.fileId = fileId;
         this.chunkNumber = chunkNumber;
         this.desiredReplicationDegree = desiredReplicationDegree;
         this.peers = ConcurrentHashMap.newKeySet();
+        this.size = size;
     }
 
     public int getPerceivedReplicationDegree() {
@@ -38,6 +40,8 @@ public class Chunk implements Serializable, Comparable<Chunk> {
     public Set<Integer> getPeers() {
         return peers;
     }
+
+    public int getSize() { return size; }
 
     @Override
     public int compareTo(Chunk o) {

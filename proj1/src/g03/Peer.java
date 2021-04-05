@@ -28,7 +28,7 @@ public class Peer implements PeerStub {
 
     ConcurrentMap<String, Chunk> storedChunks;
     ConcurrentMap<String, FileInfo> files; // FilePath -> FileInfo
-
+    ConcurrentMap<String, List<Integer>> sentChunksStatus;
     ConcurrentMap<String, ScheduledFuture<?>> messagesToSend;
     ConcurrentMap<String, ScheduledFuture<?>> backupsToSend; //FOR THE RECLAIM PROTOCOL
     ConcurrentMap<String, List<Integer>> chunksToRestore;
@@ -82,6 +82,7 @@ public class Peer implements PeerStub {
         this.messagesToSend = new ConcurrentHashMap<>();
         this.backupsToSend = new ConcurrentHashMap<>();
         this.chunksToRestore = new ConcurrentHashMap<>();
+        this.sentChunksStatus = new ConcurrentHashMap<>();
 
         this.pool = Executors.newScheduledThreadPool(16);
         this.synchronizer = Executors.newSingleThreadScheduledExecutor();
@@ -146,7 +147,10 @@ public class Peer implements PeerStub {
 
     @Override
     public void state() throws RemoteException {
-
+        System.out.println("STATE");
+        System.out.println("OCCUPIED " + currentSpace);
+        System.out.println("MAX SPACE " + maxSpace);
+        System.out.println(storedChunks.toString());
     }
 
     public static String getFileIdString(String path) {
@@ -212,6 +216,8 @@ public class Peer implements PeerStub {
 
     public long addSpace(long space) { currentSpace += space; return currentSpace; }
 
+    public long removeSpace(long space) { currentSpace -= space; return currentSpace; }
+
     public long getMaxSpace() { return maxSpace; } // in bytes
 
     public void setMaxSpace(long maxSpace) { this.maxSpace = maxSpace; }
@@ -220,6 +226,10 @@ public class Peer implements PeerStub {
 
     public ConcurrentMap<String, ScheduledFuture<?>> getBackupsToSend() {
         return backupsToSend;
+    }
+
+    public ConcurrentMap<String, List<Integer>> getSentChunksStatus() {
+        return sentChunksStatus;
     }
 }
 

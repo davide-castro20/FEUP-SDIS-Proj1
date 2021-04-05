@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 public class MC implements Runnable {
 
@@ -36,10 +37,14 @@ public class MC implements Runnable {
                             if (peer.getChunks().containsKey(key)) {
                                 Chunk c = peer.getChunks().get(key);
                                 c.getPeers().add(message.getSenderId());
-                            } else { //IDK what this else means
-                                Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
-                                peer.getChunks().put(key, c);
+                            } else if(peer.getSentChunksStatus().containsKey(message.getFileId())) {
+                                peer.getSentChunksStatus().get(message.getFileId()).set(message.getChunkNumber(),
+                                        peer.getSentChunksStatus().get(message.getFileId()).get(message.getChunkNumber()) + 1);
                             }
+//                            else { //IDK what this else means
+//                                Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
+//                                peer.getChunks().put(key, c);
+//                            }
                         };
                         break;
 
@@ -120,6 +125,8 @@ public class MC implements Runnable {
                                         e.printStackTrace();
                                     }
                                 }
+                            } else { //TODO: maybe refactor
+
                             }
                         };
                         break;
