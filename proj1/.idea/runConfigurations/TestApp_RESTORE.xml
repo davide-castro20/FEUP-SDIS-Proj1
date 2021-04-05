@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="TestApp BACKUP" type="Application" factoryName="Application">
+  <configuration default="false" name="TestApp RESTORE" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="g03.TestApp" />
     <module name="proj1" />
-    <option name="PROGRAM_PARAMETERS" value="Peer1 BACKUP teste150k 2" />
+    <option name="PROGRAM_PARAMETERS" value="Peer1 RESTORE teste150k" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

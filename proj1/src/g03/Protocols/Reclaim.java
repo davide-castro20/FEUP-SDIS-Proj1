@@ -20,6 +20,9 @@ public class Reclaim implements Runnable {
 
     @Override
     public void run() {
+        System.out.println(space);
+        System.out.println(peer.getCurrentSpace());
+
         peer.getChunks().entrySet().stream().sorted(Map.Entry.comparingByValue())
                 .takeWhile(m -> peer.getCurrentSpace() > space)
                 .forEach(this::removeChunk);

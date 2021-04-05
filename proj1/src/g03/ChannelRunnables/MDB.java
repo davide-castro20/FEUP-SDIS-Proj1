@@ -20,7 +20,6 @@ public class MDB implements Runnable {
             try {
                 Message m = new Message(peer.getMDB().receive());
                 if (m.getSenderId() != peer.getId() && m.getType() == MessageType.PUTCHUNK) {
-
                     peer.receive(m);
                 }
             } catch (IOException e) {
