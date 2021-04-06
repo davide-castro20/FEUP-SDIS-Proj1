@@ -30,7 +30,7 @@ public class MDR implements Runnable {
                             if (peer.getChunksToRestore().containsKey(m.getFileId())) {
                                 if (peer.getChunksToRestore().get(m.getFileId()).contains(m.getChunkNumber())) {
                                     //TODO: usar nio?
-                                    try (FileOutputStream out = new FileOutputStream(m.getFileId() + "-" + m.getChunkNumber())) {
+                                    try (FileOutputStream out = new FileOutputStream("backup/" + m.getFileId() + "-" + m.getChunkNumber())) {
                                         out.write(m.getBody());
                                     } catch (Exception e) {
                                         e.printStackTrace();
@@ -44,10 +44,10 @@ public class MDR implements Runnable {
                                         try (FileOutputStream out = new FileOutputStream(fileInfo.getPath() + "-restored")) {
                                             for (int i = 0; i < fileInfo.getChunkAmount(); i++) {
                                                 System.out.println(m.getFileId() + "-" + i);
-                                                try (FileInputStream in = new FileInputStream(m.getFileId() + "-" + i)) {
+                                                try (FileInputStream in = new FileInputStream("backup/" + m.getFileId() + "-" + i)) {
                                                     in.transferTo(out);
                                                     in.close();
-                                                    File chunk = new File(m.getFileId() + "-" + i);
+                                                    File chunk = new File("backup/" + m.getFileId() + "-" + i);
                                                     chunk.delete();
                                                 }
                                             }

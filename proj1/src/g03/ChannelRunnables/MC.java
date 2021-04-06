@@ -59,7 +59,7 @@ public class MC implements Runnable {
 
                                 //TODO: refactor
                                 byte[] body = null;
-                                try (FileInputStream file = new FileInputStream(key)) {
+                                try (FileInputStream file = new FileInputStream("backup/" + key)) {
                                     body = file.readAllBytes();
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -77,7 +77,7 @@ public class MC implements Runnable {
                         run = () -> {
                             peer.getChunks().forEach((key, value) -> {
                                 if (key.startsWith(message.getFileId()) && peer.getChunks().remove(key, value)) {
-                                    File chunkToDelete = new File(key);
+                                    File chunkToDelete = new File("backup/" + key);
                                     chunkToDelete.delete();
                                 }
                             });
@@ -104,7 +104,7 @@ public class MC implements Runnable {
                                                 String.valueOf(message.getChunkNumber()),
                                                 String.valueOf(peer.getChunks().get(key).getDesiredReplicationDegree())};
 
-                                        try (FileInputStream fileIn = new FileInputStream(key)) {
+                                        try (FileInputStream fileIn = new FileInputStream("backup/" + key)) {
                                             int nRead = fileIn.read(data, 0, 64000);
                                             data = Arrays.copyOf(data, nRead);
                                         } catch (Exception e) {

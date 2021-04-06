@@ -35,7 +35,7 @@ public class ReceiveChunk implements Runnable {
                 peer.addSpace(message.getBody().length);
 
                 if(message.getBody().length > 0) {
-                    try (FileOutputStream out = new FileOutputStream("backup" + key)) {
+                    try (FileOutputStream out = new FileOutputStream("backup/" + key)) {
                         out.write(message.getBody());
                     } catch (IOException e) {
                         e.printStackTrace();
