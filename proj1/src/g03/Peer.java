@@ -27,8 +27,7 @@ public class Peer implements PeerStub {
     Channel MDRChannel;
 
     ConcurrentMap<String, Chunk> storedChunks;
-    ConcurrentMap<String, FileInfo> files; // FilePath -> FileInfo
-    ConcurrentMap<String, List<Integer>> sentChunksStatus;
+    ConcurrentMap<String, FileInfo> files; // FileHash -> FileInfo
     ConcurrentMap<String, ScheduledFuture<?>> messagesToSend;
     ConcurrentMap<String, ScheduledFuture<?>> backupsToSend; //FOR THE RECLAIM PROTOCOL
     ConcurrentMap<String, List<Integer>> chunksToRestore;
@@ -82,7 +81,6 @@ public class Peer implements PeerStub {
         this.messagesToSend = new ConcurrentHashMap<>();
         this.backupsToSend = new ConcurrentHashMap<>();
         this.chunksToRestore = new ConcurrentHashMap<>();
-        this.sentChunksStatus = new ConcurrentHashMap<>();
 
         this.pool = Executors.newScheduledThreadPool(16);
         this.synchronizer = Executors.newSingleThreadScheduledExecutor();
@@ -226,10 +224,6 @@ public class Peer implements PeerStub {
 
     public ConcurrentMap<String, ScheduledFuture<?>> getBackupsToSend() {
         return backupsToSend;
-    }
-
-    public ConcurrentMap<String, List<Integer>> getSentChunksStatus() {
-        return sentChunksStatus;
     }
 }
 

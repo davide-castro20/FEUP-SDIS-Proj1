@@ -6,8 +6,10 @@ import g03.MessageType;
 import g03.Peer;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Restore implements Runnable {
     private final Peer peer;
@@ -20,12 +22,13 @@ public class Restore implements Runnable {
 
     @Override
     public void run() {
-        if (!this.peer.getFiles().containsKey(path)) {
-            System.err.println("File not found");
+        Stream<Map.Entry<String, FileInfo>> matches = this.peer.getFiles().entrySet().stream().filter(f -> f.getValue().getPath().equals(path));
+        if(matches.count() <= 0) {
+            System.err.println("File not found in backup system");
             return;
         }
 
-        FileInfo file = this.peer.getFiles().get(path);
+        FileInfo file = matches.findFirst().get().getValue();
         String hash = file.getHash();
 
         this.peer.getChunksToRestore().put(hash, IntStream.range(0, file.getChunkAmount()).boxed().collect(Collectors.toList()));

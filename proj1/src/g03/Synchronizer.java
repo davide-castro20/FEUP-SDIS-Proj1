@@ -19,10 +19,10 @@ public class Synchronizer implements Runnable {
     }
 
     private void checkFiles() {
-        for(String path : peer.getFiles().keySet()) {
-            File file = new File(path);
+        for(FileInfo fileInfo : peer.getFiles().values()) {
+            File file = new File(fileInfo.getPath());
             if(!file.exists()) { //TODO: check if file is modified (create hash with metadata)
-                peer.delete(path);
+                peer.delete(fileInfo.getPath());
             }
         }
     }

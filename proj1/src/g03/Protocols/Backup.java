@@ -37,8 +37,6 @@ public class Backup implements Runnable {
                 "0", // CHUNK NO
                 String.valueOf(replicationDegree)};
 
-        this.peer.getSentChunksStatus().put(hash, new ArrayList<>());
-
         byte[] data;
         int nRead = -1;
         int nChunk = 0;
@@ -51,7 +49,6 @@ public class Backup implements Runnable {
                 System.out.println(nRead);
                 Message msgToSend;
                 msgArgs[3] = String.valueOf(nChunk); // set chunk number
-                this.peer.getSentChunksStatus().get(hash).add(0);
                 nChunk++;
                 if (nRead < 64000) {
                     byte[] dataToSend = new byte[nRead];
@@ -66,7 +63,7 @@ public class Backup implements Runnable {
 
             //TODO: Maybe wait for threads
 //            if (!this.peer.getFiles().containsKey(path)) {
-                this.peer.getFiles().put(path, new FileInfo(path, hash, replicationDegree, nChunk));
+                this.peer.getFiles().put(hash, new FileInfo(path, hash, replicationDegree, nChunk));
 //            }
         } catch (Exception e) {
             e.printStackTrace();

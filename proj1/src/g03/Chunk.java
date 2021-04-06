@@ -21,9 +21,7 @@ public class Chunk implements Serializable, Comparable<Chunk> {
         this.size = size;
     }
 
-    public int getPerceivedReplicationDegree() {
-        return this.peers.size() + 1;
-    }
+    public int getPerceivedReplicationDegree() { return this.peers.size(); }
 
     public String getFileId() {
         return fileId;
@@ -42,6 +40,10 @@ public class Chunk implements Serializable, Comparable<Chunk> {
     }
 
     public int getSize() { return size; }
+
+    public void addPeer(Integer newPeer) {
+        peers.add(newPeer);
+    }
 
     @Override
     public int compareTo(Chunk o) {

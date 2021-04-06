@@ -50,6 +50,7 @@ public class ReceiveChunk implements Runnable {
                 }
 
                 Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree(), message.getBody().length);
+                c.addPeer(peer.getId()); //set itself as peer
 
                 this.peer.getChunks().put(key, c);
 

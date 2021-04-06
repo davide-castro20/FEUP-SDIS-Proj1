@@ -1,23 +1,25 @@
 package g03;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public class FileInfo implements Serializable {
 
     private String path;
     private String hash;
     private int desiredReplicationDegree;
-    private int chunkAmount;
+    private List<Chunk> chunksPeers;
 
     public FileInfo(String path, String hash, int desiredReplicationDegree, int chunkAmount) {
         this.path = path;
         this.hash = hash;
         this.desiredReplicationDegree = desiredReplicationDegree;
-        this.chunkAmount = chunkAmount;
-    }
-
-    public void setChunkAmount(int chunkAmount) {
-        this.chunkAmount = chunkAmount;
+        this.chunksPeers = new ArrayList<>();
+        for(int i = 0; i < chunkAmount; ++i) {
+            chunksPeers.add(new Chunk(hash, i, desiredReplicationDegree, -1));
+        }
     }
 
     public String getPath() {
@@ -33,6 +35,10 @@ public class FileInfo implements Serializable {
     }
 
     public int getChunkAmount() {
-        return chunkAmount;
+        return chunksPeers.size();
+    }
+
+    public List<Chunk> getChunksPeers() {
+        return chunksPeers;
     }
 }

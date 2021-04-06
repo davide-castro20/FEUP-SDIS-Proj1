@@ -37,9 +37,8 @@ public class MC implements Runnable {
                             if (peer.getChunks().containsKey(key)) {
                                 Chunk c = peer.getChunks().get(key);
                                 c.getPeers().add(message.getSenderId());
-                            } else if(peer.getSentChunksStatus().containsKey(message.getFileId())) {
-                                peer.getSentChunksStatus().get(message.getFileId()).set(message.getChunkNumber(),
-                                        peer.getSentChunksStatus().get(message.getFileId()).get(message.getChunkNumber()) + 1);
+                            } else if(peer.getFiles().containsKey(message.getFileId())) { //if this peer has the original file
+                                peer.getFiles().get(message.getFileId()).getChunksPeers().get(message.getChunkNumber()).addPeer(message.getSenderId());
                             }
 //                            else { //IDK what this else means
 //                                Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());

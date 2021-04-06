@@ -7,6 +7,8 @@ import g03.Peer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
+import java.util.stream.Stream;
 
 public class Delete implements Runnable {
     private final Peer peer;
@@ -19,26 +21,28 @@ public class Delete implements Runnable {
 
     @Override
     public void run() {
-        if (!this.peer.getFiles().containsKey(path)) {
-            System.err.println("File not found");
-            return;
-        }
 
-        FileInfo file = this.peer.getFiles().get(path);
-        String hash = file.getHash();
+        Stream<Map.Entry<String, FileInfo>> matches = this.peer.getFiles().entrySet().stream().filter(f -> f.getValue().getPath().equals(path));
+        if(matches.count() > 0) {
+            matches.forEach((match) -> {
 
-        String[] msgArgs = {this.peer.getProtocolVersion(),
-                String.valueOf(this.peer.getId()),
-                hash};
-        Message deleteMsg = new Message(MessageType.DELETE, msgArgs, null);
+                String hash = match.getValue().getHash();
+                String[] msgArgs = {this.peer.getProtocolVersion(),
+                        String.valueOf(this.peer.getId()),
+                        hash};
+                Message deleteMsg = new Message(MessageType.DELETE, msgArgs, null);
 
-        try {
-            this.peer.getMC().send(deleteMsg);
+                try {
+                    this.peer.getMC().send(deleteMsg);
 
-            this.peer.getFiles().remove(path);
+                    this.peer.getFiles().remove(path);
 
-        } catch (IOException e) {
-            e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        } else {
+            System.err.println("File not found in backup system");
         }
     }
 }
