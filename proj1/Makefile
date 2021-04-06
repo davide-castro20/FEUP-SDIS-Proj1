@@ -12,6 +12,7 @@ test1:
 	scripts/test.sh Peer1 BACKUP teste150k 2
 
 clean:
-	scripts/cleanup.sh
+	scripts/cleanup.sh 1
+	scripts/cleanup.sh 2
 
 

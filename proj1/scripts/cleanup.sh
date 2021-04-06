@@ -15,7 +15,7 @@ argc=$#
 if ((argc == 1 ))
 then
 	peer_id=$1
-	rm -f test/peer_id/fileData test/peer_id/chunkData test/peer_id/backup
+	rm -rf test/"${peer_id}"/fileData test/"${peer_id}"/chunkData test/"${peer_id}"/backup
 else 
 	echo "Usage: $0 [<peer_id>]]"
 	exit 1
