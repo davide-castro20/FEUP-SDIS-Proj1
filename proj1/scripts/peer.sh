@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#!/bin/bash
 
 # Script for running a peer
 # To be run in the root of the build tree
@@ -34,5 +34,5 @@ mdr_port=$9
 
 # echo "java peer.Peer ${ver} ${id} ${sap} ${mc_addr} ${mc_port} ${mdb_addr} ${mdb_port} ${mdr_addr} ${mdr_port}"
 
-java peer.Peer ${ver} ${id} ${sap} ${mc_addr} ${mc_port} ${mdb_addr} ${mdb_port} ${mdr_addr} ${mdr_port}
+cd test/"${id}" && java -classpath ../../build g03.Peer ${ver} ${id} ${sap} ${mc_addr}:${mc_port} ${mdb_addr}:${mdb_port} ${mdr_addr}:${mdr_port}
 

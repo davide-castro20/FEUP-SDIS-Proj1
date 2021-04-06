@@ -1,5 +1,7 @@
 package g03;
 
+import g03.PeerStub;
+
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 

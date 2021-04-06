@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#!/bin/bash
 
 # Script for running the test app
 # To be run at the root of the compiled tree
@@ -78,6 +78,6 @@ esac
 # Execute the program
 # Should not need to change anything but the class and its package, unless you use any jar file
 
-# echo "java test.TestApp ${pap} ${oper} ${opernd_1} ${rep_deg}"
+# echo "java g03.TestApp ${pap} ${oper} ${opernd_1} ${rep_deg}"
 
-java test.TestApp ${pap} ${oper} ${opernd_1} ${rep_deg}
+cd build && java g03.TestApp ${pap} ${oper} ${opernd_1} ${rep_deg}

@@ -1,4 +1,4 @@
-#! /usr/bin/bash
+#!/bin/bash
 
 # Placeholder for setup script
 # To be executed on the root of the compiled tree
@@ -15,6 +15,8 @@ argc=$#
 if ((argc == 1 ))
 then
 	peer_id=$1
+	mkdir test/"${peer_id}" || true
+	mkdir test/"${peer_id}"/backup || true
 else
 	echo "Usage: $0 [<peer_id>]]"
 	exit 1

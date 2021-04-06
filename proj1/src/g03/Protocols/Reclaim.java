@@ -37,7 +37,7 @@ public class Reclaim implements Runnable {
                 + stringChunkEntry.getValue().getChunkNumber();
 
         try {
-            File fileToRemove = new File(chunkName);
+            File fileToRemove = new File("backup" + chunkName);
 
             if (fileToRemove.delete()) {
                 System.out.println("DELETED " + chunkName);
