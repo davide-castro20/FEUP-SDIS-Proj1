@@ -23,12 +23,11 @@ public class Restore implements Runnable {
     @Override
     public void run() {
         Stream<Map.Entry<String, FileInfo>> matches = this.peer.getFiles().entrySet().stream().filter(f -> f.getValue().getPath().equals(path));
-        if(matches.count() <= 0) {
-            System.err.println("File not found in backup system");
-            return;
-        }
 
         FileInfo file = matches.findFirst().get().getValue();
+        if(file == null) {
+            System.err.println("File not found in backup system");
+        }
         String hash = file.getHash();
 
         this.peer.getChunksToRestore().put(hash, IntStream.range(0, file.getChunkAmount()).boxed().collect(Collectors.toList()));

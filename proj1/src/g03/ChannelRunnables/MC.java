@@ -32,14 +32,17 @@ public class MC implements Runnable {
                 switch(message.getType()) {
                     case STORED:
                          run = () -> {
-                            String key = message.getFileId() + "-" + message.getChunkNumber();
+                             String key = message.getFileId() + "-" + message.getChunkNumber();
 
-                            if (peer.getChunks().containsKey(key)) {
+                             System.out.println("RECEIVED STORED " + key + " FROM " + message.getSenderId());
+
+
+                             if (peer.getChunks().containsKey(key)) {
                                 Chunk c = peer.getChunks().get(key);
                                 c.getPeers().add(message.getSenderId());
-                            } else if(peer.getFiles().containsKey(message.getFileId())) { //if this peer has the original file
+                             } else if(peer.getFiles().containsKey(message.getFileId())) { //if this peer has the original file
                                 peer.getFiles().get(message.getFileId()).getChunksPeers().get(message.getChunkNumber()).addPeer(message.getSenderId());
-                            }
+                             }
 //                            else { //IDK what this else means
 //                                Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
 //                                peer.getChunks().put(key, c);
