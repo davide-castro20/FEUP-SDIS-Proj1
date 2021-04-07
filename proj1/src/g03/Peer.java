@@ -152,11 +152,8 @@ public class Peer implements PeerStub {
     }
 
     @Override
-    public void state() throws RemoteException {
-        System.out.println("STATE");
-        System.out.println("OCCUPIED " + currentSpace);
-        System.out.println("MAX SPACE " + maxSpace);
-        System.out.println(storedChunks.toString());
+    public PeerState state() throws RemoteException {
+        return new PeerState(maxSpace, currentSpace, storedChunks, files);
     }
 
     public static String getFileIdString(String path) {

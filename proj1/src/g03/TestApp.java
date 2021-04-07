@@ -1,7 +1,5 @@
 package g03;
 
-import g03.PeerStub;
-
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
@@ -29,7 +27,8 @@ public class TestApp {
             } else if (operation.equalsIgnoreCase("RECLAIM")) {
                 stub.reclaim(Long.parseLong(args[2]));
             } else if (operation.equalsIgnoreCase("STATE")) {
-                stub.state();
+                PeerState state = stub.state();
+                System.out.println(state.toString());
             }
 
         } catch (Exception e) {
