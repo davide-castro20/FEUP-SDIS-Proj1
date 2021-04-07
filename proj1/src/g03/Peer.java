@@ -250,6 +250,18 @@ public class Peer implements PeerStub {
         return tcpConnections;
     }
 
+    public static boolean supportsEnhancement(String version, Enhancements enhancement) {
+        switch (version) {
+            case "1.1":
+                return enhancement == Enhancements.RESTORE;
+            case "1.2":
+            case "1.3":
+            default:
+                break;
+        }
+
+        return false;
+    }
 }
 
 

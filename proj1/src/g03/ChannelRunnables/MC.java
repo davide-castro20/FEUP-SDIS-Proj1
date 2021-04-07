@@ -60,19 +60,29 @@ public class MC implements Runnable {
                                         String.valueOf(message.getChunkNumber())};
 
                                 //TODO: refactor
+
                                 byte[] body = null;
-                                try (FileInputStream file = new FileInputStream("backup/" + key)) {
-                                    body = file.readAllBytes();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                                int port = -1;
+
+                                if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE)
+                                        && Peer.supportsEnhancement(message.getProtocolVersion(), Enhancements.RESTORE)) {
+
+                                    port = 40000 + message.getChunkNumber();
+
+
+                                } else {
+                                    try (FileInputStream file = new FileInputStream("backup/" + key)) {
+                                        body = file.readAllBytes();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
 
-                                if(peer.getProtocolVersion().equals("1.0")) {
-                                    //Schedule the CHUNK message
-                                    Message msgToSend = new Message(MessageType.CHUNK, msgArgs, body);
-                                    ScheduledFuture<?> task = peer.getPool().schedule(new ChunkMessageSender(peer, msgToSend), new Random().nextInt(400), TimeUnit.MILLISECONDS);
-                                    peer.getMessagesToSend().put(key, task);
-                                }
+                                //Schedule the CHUNK message
+                                Message msgToSend = new Message(MessageType.CHUNK, msgArgs, body);
+                                ScheduledFuture<?> task = peer.getPool().schedule(new ChunkMessageSender(peer, msgToSend, port), new Random().nextInt(400), TimeUnit.MILLISECONDS);
+                                peer.getMessagesToSend().put(key, task);
+
                             }
                         };
                         break;

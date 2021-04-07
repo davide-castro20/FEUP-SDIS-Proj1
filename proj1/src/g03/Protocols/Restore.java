@@ -40,12 +40,13 @@ public class Restore implements Runnable {
             Message msgToSend = new Message(MessageType.GETCHUNK, msgArgs, null);
 
             try {
-                this.peer.getMC().send(msgToSend);
-
-                if(!peer.getProtocolVersion().equals("1.0")) {
-                    ScheduledFuture tcp_task = peer.getPool().schedule(new TCPInitiator(peer, hash, i), 0, TimeUnit.MICROSECONDS);
+                if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE)) {
+                    ScheduledFuture<?> tcp_task = peer.getPool().schedule(new TCPInitiator(peer, hash, i), 0, TimeUnit.MICROSECONDS);
                     peer.getTcpConnections().put(hash + "-" + i, tcp_task);
                 }
+
+                this.peer.getMC().send(msgToSend);
+
             } catch (IOException e) {
                 e.printStackTrace();
             }

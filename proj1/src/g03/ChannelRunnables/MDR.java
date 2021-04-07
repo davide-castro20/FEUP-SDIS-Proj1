@@ -1,9 +1,6 @@
 package g03.ChannelRunnables;
 
-import g03.FileInfo;
-import g03.Message;
-import g03.MessageType;
-import g03.Peer;
+import g03.*;
 
 import java.io.*;
 import java.util.Arrays;
@@ -21,7 +18,8 @@ public class MDR implements Runnable {
         while (true) {
             try {
                 Message m = new Message(peer.getMDR().receive());
-                if (m.getSenderId() != peer.getId() && m.getType() == MessageType.CHUNK) {
+                if (m.getSenderId() != peer.getId() && m.getType() == MessageType.CHUNK
+                        && (!Peer.supportsEnhancement(m.getProtocolVersion(), Enhancements.RESTORE) || !Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE))) {
                     //TODO: maybe refactor this
                     Runnable run = null;
                     run = () -> {

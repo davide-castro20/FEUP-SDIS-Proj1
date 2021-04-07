@@ -23,7 +23,7 @@ public class TCPInitiator implements Runnable {
         try (ServerSocket serverSocket = new ServerSocket(port);
              Socket clientSocket = serverSocket.accept()) {
 
-            peer.getChunksToRestore().get(fileHash).remove(chunkNumber);
+            peer.getChunksToRestore().get(fileHash).remove(Integer.valueOf(chunkNumber));
 
             BufferedInputStream in = new BufferedInputStream(clientSocket.getInputStream());
 
@@ -35,6 +35,8 @@ public class TCPInitiator implements Runnable {
                 byte[] toWrite = Arrays.copyOf(readData, nRead);
                 outChunk.write(toWrite);
             }
+            in.close();
+            outChunk.close();
 
             if (peer.getChunksToRestore().containsKey(fileHash) && peer.getChunksToRestore().get(fileHash).size() == 0) {
                 peer.getChunksToRestore().remove(fileHash);
@@ -51,6 +53,8 @@ public class TCPInitiator implements Runnable {
                             inChunk.close();
                             File chunk = new File("backup/" + fileHash + "-" + i);
                             chunk.delete();
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
 
