@@ -14,6 +14,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 public class Peer implements PeerStub {
@@ -86,6 +87,7 @@ public class Peer implements PeerStub {
         this.synchronizer = Executors.newSingleThreadScheduledExecutor();
 
         this.readChunkFileData();
+        this.checkChunks();
     }
 
     private void readChunkFileData() {
@@ -103,6 +105,12 @@ public class Peer implements PeerStub {
         } catch (FileNotFoundException ignored) {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void checkChunks() {
+        for(Map.Entry<String, Chunk> storedChunk : storedChunks.entrySet()) {
+
         }
     }
 

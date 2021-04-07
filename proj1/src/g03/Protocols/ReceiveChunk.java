@@ -23,6 +23,9 @@ public class ReceiveChunk implements Runnable {
     @Override
     public void run() {
         String key = message.getFileId() + "-" + message.getChunkNumber();
+
+
+
         if(!peer.getChunks().containsKey(key)) {
 
             Stream<FileInfo> fileInThisPeer = peer.getFiles().values().stream().filter(f -> f.getHash().equals(message.getFileId()));
@@ -54,22 +57,10 @@ public class ReceiveChunk implements Runnable {
 
                 this.peer.getChunks().put(key, c);
 
-                Message reply = new Message(MessageType.STORED,
-                        new String[]{
-                                String.valueOf(this.peer.getProtocolVersion()),
-                                String.valueOf(this.peer.getId()), message.getFileId(),
-                                String.valueOf(message.getChunkNumber())},
-                        null);
-
-                //Refactor
-                peer.getPool().schedule(() -> {
-                    try {
-                        this.peer.getMC().send(reply);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }, new Random().nextInt(400), TimeUnit.MILLISECONDS);
+                this.sendStoredMessage();
             }
+        } else { //if the peer already has the chunk
+            this.sendStoredMessage();
         }
 
         // in case this peer is trying to backup this chunk (reclaim - the replication drops) that operation will be canceled
@@ -78,5 +69,23 @@ public class ReceiveChunk implements Runnable {
             peer.getBackupsToSend().get(key).cancel(false);
             peer.getBackupsToSend().remove(key);
         }
+    }
+
+    private void sendStoredMessage() {
+        Message reply = new Message(MessageType.STORED,
+                new String[]{
+                        String.valueOf(this.peer.getProtocolVersion()),
+                        String.valueOf(this.peer.getId()), message.getFileId(),
+                        String.valueOf(message.getChunkNumber())},
+                null);
+
+        //Refactor
+        peer.getPool().schedule(() -> {
+            try {
+                this.peer.getMC().send(reply);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }, new Random().nextInt(400), TimeUnit.MILLISECONDS);
     }
 }
