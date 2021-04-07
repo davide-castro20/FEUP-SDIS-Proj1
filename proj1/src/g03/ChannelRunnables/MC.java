@@ -73,14 +73,16 @@ public class MC implements Runnable {
                         break;
 
                     case DELETE:
-                        run = () -> {
+                        run = () ->
                             peer.getChunks().forEach((key, value) -> {
+                                System.out.println("CHECKING FOR CHUNK TO DELETE " + key);
                                 if (key.startsWith(message.getFileId()) && peer.getChunks().remove(key, value)) {
+                                    System.out.println("DELETING CHUNK " + key);
                                     File chunkToDelete = new File("backup/" + key);
                                     chunkToDelete.delete();
                                 }
                             });
-                        };
+
                         break;
 
                     case REMOVED:

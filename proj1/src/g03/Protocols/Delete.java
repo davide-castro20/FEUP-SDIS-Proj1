@@ -5,9 +5,9 @@ import g03.Message;
 import g03.MessageType;
 import g03.Peer;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 public class Delete implements Runnable {
@@ -23,24 +23,30 @@ public class Delete implements Runnable {
     public void run() {
 
         Stream<Map.Entry<String, FileInfo>> matches = this.peer.getFiles().entrySet().stream().filter(f -> f.getValue().getPath().equals(path));
-        if(matches.count() > 0) {
-            matches.forEach((match) -> {
 
-                String hash = match.getValue().getHash();
-                String[] msgArgs = {this.peer.getProtocolVersion(),
-                        String.valueOf(this.peer.getId()),
-                        hash};
-                Message deleteMsg = new Message(MessageType.DELETE, msgArgs, null);
+        //TODO: maybe refactor (remember forEach() and count() are TERMINAL operations - WILL CONSUME the stream!)
+        AtomicBoolean deleted = new AtomicBoolean(false);
 
-                try {
-                    this.peer.getMC().send(deleteMsg);
+        matches.forEach((match) -> {
+            String hash = match.getValue().getHash();
+            String[] msgArgs = {this.peer.getProtocolVersion(),
+                    String.valueOf(this.peer.getId()),
+                    hash};
+            Message deleteMsg = new Message(MessageType.DELETE, msgArgs, null);
 
-                    this.peer.getFiles().remove(path);
+            try {
+                this.peer.getMC().send(deleteMsg);
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            this.peer.getFiles().remove(match.getKey());
+            deleted.set(true);
+        });
+
+        if(deleted.get()) {
+            System.out.println("DELETED " + path);
         } else {
             System.err.println("File not found in backup system");
         }
