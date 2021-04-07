@@ -13,9 +13,10 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Peer implements PeerStub {
 
@@ -33,6 +34,9 @@ public class Peer implements PeerStub {
     ConcurrentMap<String, ScheduledFuture<?>> backupsToSend; //FOR THE RECLAIM PROTOCOL
     ConcurrentMap<String, List<Integer>> chunksToRestore;
 
+    ConcurrentMap<String, ScheduledFuture<?>> tcpConnections;
+
+    ConcurrentLinkedQueue<Integer> tcp_ports;
     ScheduledExecutorService pool;
     ScheduledExecutorService synchronizer;
 
@@ -88,6 +92,10 @@ public class Peer implements PeerStub {
 
         this.readChunkFileData();
         this.checkChunks();
+
+        this.tcp_ports = IntStream.range(40000 + 100*(id-1), 40000 + 100*id).boxed()
+                .collect(Collectors.toCollection(ConcurrentLinkedQueue::new));
+        this.tcpConnections = new ConcurrentHashMap<>();
     }
 
     private void readChunkFileData() {
@@ -233,6 +241,15 @@ public class Peer implements PeerStub {
     public ConcurrentMap<String, ScheduledFuture<?>> getBackupsToSend() {
         return backupsToSend;
     }
+
+    public ConcurrentLinkedQueue<Integer> getTcp_ports() {
+        return tcp_ports;
+    }
+
+    public ConcurrentMap<String, ScheduledFuture<?>> getTcpConnections() {
+        return tcpConnections;
+    }
+
 }
 
 

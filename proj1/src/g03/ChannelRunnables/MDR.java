@@ -29,6 +29,9 @@ public class MDR implements Runnable {
                             System.out.println("CHUNK NUMBER: " + m.getChunkNumber());
                             if (peer.getChunksToRestore().containsKey(m.getFileId())) {
                                 if (peer.getChunksToRestore().get(m.getFileId()).contains(m.getChunkNumber())) {
+                                    //cancel tcp wait
+                                    peer.getTcpConnections().get(m.getFileId() + "-" + m.getChunkNumber()).cancel(true);
+
                                     //TODO: usar nio?
                                     try (FileOutputStream out = new FileOutputStream("backup/" + m.getFileId() + "-" + m.getChunkNumber())) {
                                         out.write(m.getBody());
@@ -36,7 +39,9 @@ public class MDR implements Runnable {
                                         e.printStackTrace();
                                     }
                                     peer.getChunksToRestore().get(m.getFileId()).remove(Integer.valueOf(m.getChunkNumber()));
-                                    if (peer.getChunksToRestore().get(m.getFileId()).size() == 0) {
+                                    if (peer.getChunksToRestore().containsKey(m.getFileId()) && peer.getChunksToRestore().get(m.getFileId()).size() == 0) {
+                                        peer.getChunksToRestore().remove(m.getFileId());
+
                                         System.out.println("ASSEMBLING FILE");
                                         FileInfo fileInfo = peer.getFiles().values().stream().filter(f -> f.getHash().equals(m.getFileId())).findFirst().get();
 
@@ -53,7 +58,6 @@ public class MDR implements Runnable {
                                             }
 
                                         }
-                                        peer.getChunksToRestore().remove(m.getFileId());
                                     }
                                 }
 

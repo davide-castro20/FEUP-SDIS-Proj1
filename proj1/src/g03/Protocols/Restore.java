@@ -1,12 +1,11 @@
 package g03.Protocols;
 
-import g03.FileInfo;
-import g03.Message;
-import g03.MessageType;
-import g03.Peer;
+import g03.*;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -42,6 +41,11 @@ public class Restore implements Runnable {
 
             try {
                 this.peer.getMC().send(msgToSend);
+
+                if(!peer.getProtocolVersion().equals("1.0")) {
+                    ScheduledFuture tcp_task = peer.getPool().schedule(new TCPInitiator(peer, hash, i), 0, TimeUnit.MICROSECONDS);
+                    peer.getTcpConnections().put(hash + "-" + i, tcp_task);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

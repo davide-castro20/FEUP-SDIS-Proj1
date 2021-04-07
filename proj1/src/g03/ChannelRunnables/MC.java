@@ -67,10 +67,12 @@ public class MC implements Runnable {
                                     e.printStackTrace();
                                 }
 
-                                //Schedule the CHUNK message
-                                Message msgToSend = new Message(MessageType.CHUNK, msgArgs, body);
-                                ScheduledFuture<?> task = peer.getPool().schedule(new ChunkMessageSender(peer, msgToSend), new Random().nextInt(400), TimeUnit.MILLISECONDS);
-                                peer.getMessagesToSend().put(key, task);
+                                if(peer.getProtocolVersion().equals("1.0")) {
+                                    //Schedule the CHUNK message
+                                    Message msgToSend = new Message(MessageType.CHUNK, msgArgs, body);
+                                    ScheduledFuture<?> task = peer.getPool().schedule(new ChunkMessageSender(peer, msgToSend), new Random().nextInt(400), TimeUnit.MILLISECONDS);
+                                    peer.getMessagesToSend().put(key, task);
+                                }
                             }
                         };
                         break;
