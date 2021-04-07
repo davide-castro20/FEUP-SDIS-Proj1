@@ -11,11 +11,11 @@ public class TCPInitiator implements Runnable {
     private int chunkNumber;
     private int port;
 
-    public TCPInitiator(Peer peer, String fileHash, int chunkNumber) {
+    public TCPInitiator(Peer peer, String fileHash, int chunkNumber, int port) {
         this.peer = peer;
         this.fileHash = fileHash;
         this.chunkNumber = chunkNumber;
-        this.port = peer.getTcp_ports().remove();
+        this.port = port;
     }
 
     @Override

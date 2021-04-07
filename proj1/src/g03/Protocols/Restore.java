@@ -3,6 +3,9 @@ package g03.Protocols;
 import g03.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -32,22 +35,26 @@ public class Restore implements Runnable {
         this.peer.getChunksToRestore().put(hash, IntStream.range(0, file.getChunkAmount()).boxed().collect(Collectors.toList()));
 
         for (int i = 0; i < file.getChunkAmount(); i++) {
-            String[] msgArgs = {this.peer.getProtocolVersion(),
+            List<String> msgArgs = new ArrayList(Arrays.asList(this.peer.getProtocolVersion(),
                     String.valueOf(this.peer.getId()),
                     hash,
-                    String.valueOf(i)};
-
-            Message msgToSend = new Message(MessageType.GETCHUNK, msgArgs, null);
+                    String.valueOf(i)));
 
             try {
+                Message msgToSend;
+                System.out.println("TESTE");
                 if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE)) {
-                    ScheduledFuture<?> tcp_task = peer.getPool().schedule(new TCPInitiator(peer, hash, i), 0, TimeUnit.MICROSECONDS);
+                    int port = peer.getTcp_ports().remove();
+                    ScheduledFuture<?> tcp_task = peer.getPool().schedule(new TCPInitiator(peer, hash, i, port), 0, TimeUnit.MICROSECONDS);
                     peer.getTcpConnections().put(hash + "-" + i, tcp_task);
+                    msgArgs.add(Integer.toString(port));
                 }
-
+                System.out.println("MAKING GETCHUNK MESSAGE " + msgArgs.toString());
+                msgToSend = new Message(MessageType.GETCHUNK, msgArgs.toArray(new String[0]), null);
+                System.out.println("SENDING GETCHUNK " + msgArgs.toArray(new String[0]).toString());
                 this.peer.getMC().send(msgToSend);
 
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 

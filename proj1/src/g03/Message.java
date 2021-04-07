@@ -11,6 +11,7 @@ public class Message {
     int chunkNumber = -1;
     int replicationDegree = -1;
     byte[] body;
+    int port = -1;
 
     public Message(byte[] packet) {
         String packetStr = new String(packet);
@@ -32,6 +33,10 @@ public class Message {
             this.body = null;
         else
             this.body = Arrays.copyOfRange(packet, indexBody + 4, packet.length);
+
+        if(Peer.supportsEnhancement(protocolVersion, Enhancements.RESTORE) && type == MessageType.GETCHUNK) {
+            this.port = Integer.parseInt(message[0].split("\r\n")[1].trim());
+        }
     }
 
     public Message(MessageType type, String[] args, byte[] body) {
@@ -47,6 +52,10 @@ public class Message {
 
         } else if(type != MessageType.DELETE) {
             this.chunkNumber = Integer.parseInt(args[3]);
+
+            if(Peer.supportsEnhancement(protocolVersion, Enhancements.RESTORE) && this.type == MessageType.GETCHUNK) {
+                this.port = Integer.parseInt(args[4]);
+            }
         }
     }
 
@@ -65,6 +74,10 @@ public class Message {
         }
         if (this.replicationDegree != -1) {
             header += this.replicationDegree + " ";
+        }
+
+        if(this.type == MessageType.GETCHUNK && this.port != -1) {
+            header += "\r\n " + this.port;
         }
 
         header += " \r\n\r\n";
@@ -105,5 +118,9 @@ public class Message {
 
     public int getReplicationDegree() {
         return replicationDegree;
+    }
+
+    public int getPort() {
+        return port;
     }
 }

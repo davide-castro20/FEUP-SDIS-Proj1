@@ -63,11 +63,12 @@ public class MC implements Runnable {
 
                                 byte[] body = null;
                                 int port = -1;
-
+                                System.out.println("GETCHUNK " + message.getProtocolVersion() + " " + peer.getProtocolVersion() + " " + message.getPort());
                                 if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE)
                                         && Peer.supportsEnhancement(message.getProtocolVersion(), Enhancements.RESTORE)) {
 
-                                    port = 40000 + message.getChunkNumber();
+                                    port = message.getPort();
+                                    System.out.println("PORT " + port);
 
 
                                 } else {
