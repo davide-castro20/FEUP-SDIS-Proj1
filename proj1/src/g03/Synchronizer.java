@@ -21,7 +21,7 @@ public class Synchronizer implements Runnable {
     private void checkFiles() {
         for(FileInfo fileInfo : peer.getFiles().values()) {
             File file = new File(fileInfo.getPath());
-            if(!file.exists()) { //TODO: check if file is modified (create hash with metadata)
+            if(!file.exists() || !Peer.getFileIdString(fileInfo.getPath()).equals(fileInfo.getHash())) {
                 peer.delete(fileInfo.getPath());
             }
         }

@@ -158,12 +158,15 @@ public class Peer implements PeerStub {
 
     public static String getFileIdString(String path) {
         MessageDigest digest = null;
+
+        File file = new File(path);
+
         try {
             digest = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        byte[] hash = digest.digest(path.getBytes());
+        byte[] hash = digest.digest((path + file.lastModified()).getBytes());
 
         StringBuilder result = new StringBuilder();
         for (byte b : hash) {

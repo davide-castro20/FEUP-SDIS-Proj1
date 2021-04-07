@@ -46,8 +46,8 @@ public class PeerState implements Serializable {
         }
 
         result += "------------------STORAGE------------------\n";
-        result += "Total Capacity: " + this.maxSpace / 1000 + "\n";
-        result += "Current used space: " + this.currentSpace / 1000 + "\n";
+        result += "Total Capacity: " + this.maxSpace / 1000 + "KB\n";
+        result += "Current used space: " + this.currentSpace / 1000 + "KB\n";
 
         return result;
     }

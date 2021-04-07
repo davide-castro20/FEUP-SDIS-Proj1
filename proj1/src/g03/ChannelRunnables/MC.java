@@ -83,6 +83,7 @@ public class MC implements Runnable {
                                     System.out.println("DELETING CHUNK " + key);
                                     File chunkToDelete = new File("backup/" + key);
                                     chunkToDelete.delete();
+                                    peer.removeSpace(value.getSize());
                                 }
                             });
 

@@ -22,13 +22,9 @@ public class Backup implements Runnable {
     @Override
     public void run() {
 
-        //TODO: Verificar tamanho (max 64 GB)
         File fileToBackup = new File(path);
-        if(!fileToBackup.exists() || fileToBackup.isDirectory())
+        if(!fileToBackup.exists() || fileToBackup.isDirectory() || fileToBackup.length() > 64000000000L)
             return;
-        if (fileToBackup.length() > 64000000000L) {
-            return;
-        }
 
         String hash = Peer.getFileIdString(path);
         String[] msgArgs = {this.peer.getProtocolVersion(),

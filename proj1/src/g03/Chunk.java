@@ -47,14 +47,14 @@ public class Chunk implements Serializable, Comparable<Chunk> {
 
     @Override
     public int compareTo(Chunk o) {
-        int excessReplication = this.peers.size() + 1 - this.desiredReplicationDegree;
+        int excessReplication = this.peers.size() - this.desiredReplicationDegree;
         int otherExcess = o.getPerceivedReplicationDegree() - o.getDesiredReplicationDegree();
 
         if(excessReplication == otherExcess) {
-            long thisSize = new File(this.fileId + "-" + this.chunkNumber).length();
-            long otherSize = new File(o.getFileId() + "-" + o.getChunkNumber()).length();
+            long thisSize = size;
+            long otherSize = o.getSize();
 
-            try{
+            try {
                 return Math.toIntExact(thisSize - otherSize);
             } catch (Exception ignore) {
                 return 0;

@@ -2,7 +2,7 @@
   <configuration default="false" name="TestApp STATE" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="g03.TestApp" />
     <module name="proj1" />
-    <option name="PROGRAM_PARAMETERS" value="Peer1 STATE" />
+    <option name="PROGRAM_PARAMETERS" value="Peer3 STATE" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
