@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 
 public class Channel {
@@ -17,6 +18,7 @@ public class Channel {
         this.socket = new MulticastSocket(this.port);
         this.group = InetAddress.getByName(address);
         socket.joinGroup(this.group);
+        socket.setSoTimeout(100);
     }
 
     public void send(Message message) throws IOException {
@@ -28,7 +30,21 @@ public class Channel {
     public byte[] receive() throws IOException {
         byte[] mrbuf = new byte[65000];
         DatagramPacket packet = new DatagramPacket(mrbuf, mrbuf.length);
-        this.socket.receive(packet);
+        try {
+            this.socket.receive(packet);
+        } catch (SocketTimeoutException ignored) { return null;}
+
         return Arrays.copyOf(mrbuf, packet.getLength());
+    }
+
+    public void leaveGroup() throws IOException {
+//        socket.leaveGroup(this.group);
+//        socket.close();
+    }
+
+    public void joinGroup() throws IOException {
+//        socket = new MulticastSocket(this.port);
+//        socket.joinGroup(this.group);
+//        socket.setSoTimeout(100);
     }
 }

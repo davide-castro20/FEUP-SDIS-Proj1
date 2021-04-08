@@ -20,7 +20,7 @@ public class Synchronizer implements Runnable {
     private void checkFiles() {
         for(FileInfo fileInfo : peer.getFiles().values()) {
             File file = new File(fileInfo.getPath());
-            if(!file.exists() || !Peer.getFileIdString(fileInfo.getPath()).equals(fileInfo.getHash())) {
+            if(!file.exists() || !Peer.getFileIdString(fileInfo.getPath(), peer.id).equals(fileInfo.getHash())) {
                 peer.delete(fileInfo.getPath());
             }
         }

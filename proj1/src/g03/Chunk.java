@@ -45,6 +45,8 @@ public class Chunk implements Serializable, Comparable<Chunk> {
         peers.add(newPeer);
     }
 
+    public void removePeer(Integer peerToRemove) { peers.remove(peerToRemove); }
+
     @Override
     public int compareTo(Chunk o) {
         int excessReplication = this.peers.size() - this.desiredReplicationDegree;

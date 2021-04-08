@@ -17,7 +17,11 @@ public class MDR implements Runnable {
     public void run() {
         while (true) {
             try {
-                Message m = new Message(peer.getMDR().receive());
+                byte[] packet = peer.getMDR().receive();
+                if(packet == null)
+                    continue;
+                Message m = new Message(packet);
+
                 if (m.getSenderId() != peer.getId() && m.getType() == MessageType.CHUNK
                         && (!Peer.supportsEnhancement(m.getProtocolVersion(), Enhancements.RESTORE) || !Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE))) {
                     //TODO: maybe refactor this
@@ -27,9 +31,10 @@ public class MDR implements Runnable {
                             System.out.println("CHUNK NUMBER: " + m.getChunkNumber());
                             if (peer.getChunksToRestore().containsKey(m.getFileId())) {
                                 if (peer.getChunksToRestore().get(m.getFileId()).contains(m.getChunkNumber())) {
-                                    //cancel tcp accept wait
-                                    peer.getTcpConnections().get(m.getFileId() + "-" + m.getChunkNumber()).cancel(true);
-
+                                    if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE)) {
+                                        //cancel tcp accept wait
+                                        peer.getTcpConnections().get(m.getFileId() + "-" + m.getChunkNumber()).cancel(true);
+                                    }
                                     //TODO: usar nio?
                                     try (FileOutputStream out = new FileOutputStream("restore/" + m.getFileId() + "-" + m.getChunkNumber())) {
                                         out.write(m.getBody());

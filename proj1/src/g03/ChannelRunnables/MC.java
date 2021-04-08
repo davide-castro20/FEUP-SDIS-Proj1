@@ -24,7 +24,11 @@ public class MC implements Runnable {
     public void run() {
         while (true) {
             try {
-                Message message = new Message(peer.getMC().receive());
+                byte[] packet = peer.getMC().receive();
+                if(packet == null)
+                    continue;
+                Message message = new Message(packet);
+
                 if(message.getSenderId() == peer.getId())
                     continue;
                 //TODO: refactor - maybe change this to runnable classes
@@ -113,7 +117,6 @@ public class MC implements Runnable {
                                 if (peer.getChunks().get(key).getPerceivedReplicationDegree() < peer.getChunks().get(key).getDesiredReplicationDegree()) {
                                     System.out.println("CHUNK " + key + " replication degree dropped below desired");
                                     byte[] data = new byte[64000];
-                                    Message msgToSend = null;
                                     try {
                                         System.out.println(peer.getId());
                                         String[] msgArgs = {peer.getProtocolVersion(),
@@ -128,23 +131,33 @@ public class MC implements Runnable {
                                         } catch (Exception e) {
                                             e.printStackTrace();
                                         }
-                                        msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                    try {
+                                        final Message msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
+
+                                        if(peer.getStoppedMDB() && Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.BACKUP)) {
+                                            peer.restartMDB();
+                                        }
+
                                         System.out.println("SCHEDULING PUTCHUNK WITH " + data.length + " BYTES OF DATA");
-                                        ScheduledFuture<?> task = peer.getPool().schedule(
-                                                new PutChunkMessageSender(peer, msgToSend, peer.getChunks().get(key).getDesiredReplicationDegree(), 5),
-                                                new Random().nextInt(400), TimeUnit.MILLISECONDS);
+                                        ScheduledFuture<?> task = peer.getPool().schedule( () -> {
+                                            new PutChunkMessageSender(peer, msgToSend, peer.getChunks().get(key).getDesiredReplicationDegree(), 5).run();
+                                            if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.BACKUP)) {
+                                                if(!peer.getStoppedMDB() && peer.getCurrentSpace() == peer.getMaxSpace()) {
+                                                    try {
+                                                        peer.interruptMDB();
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                }
+                                            }
+                                        }, new Random().nextInt(400), TimeUnit.MILLISECONDS);
                                         peer.getBackupsToSend().put(key, task);
                                         System.out.println(peer.getBackupsToSend().keySet().toString());
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
                                 }
-                            } else { //TODO: maybe refactor
-
+                            } else if(peer.getFiles().containsKey(message.getFileId())) {
+                                peer.getFiles().get(message.getFileId()).getChunksPeers().get(message.getChunkNumber()).removePeer(message.getSenderId());
                             }
                         };
                         break;

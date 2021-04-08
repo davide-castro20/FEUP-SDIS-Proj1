@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="TestApp STATE" type="Application" factoryName="Application">
+  <configuration default="false" name="TestApp RECLAIM 2 64" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="g03.TestApp" />
     <module name="proj1" />
-    <option name="PROGRAM_PARAMETERS" value="Peer2 STATE" />
+    <option name="PROGRAM_PARAMETERS" value="Peer2 RECLAIM 64" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

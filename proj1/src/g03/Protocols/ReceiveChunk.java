@@ -63,6 +63,15 @@ public class ReceiveChunk implements Runnable {
         if(peer.getBackupsToSend().containsKey(key)) {
             peer.getBackupsToSend().get(key).cancel(false);
             peer.getBackupsToSend().remove(key);
+            if(peer.getCurrentSpace() == peer.getMaxSpace() && Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.BACKUP)) {
+                if(!peer.getStoppedMDB()) {
+                    try {
+                        peer.interruptMDB();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 

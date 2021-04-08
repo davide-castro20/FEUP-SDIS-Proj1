@@ -16,13 +16,18 @@ public class MDB implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
+        while (!peer.getStoppedMDB()) {
             try {
-                Message m = new Message(peer.getMDB().receive());
+                byte[] packet = peer.getMDB().receive();
+                if(packet == null)
+                    continue;
+                System.out.println(packet.toString());
+                Message m = new Message(packet);
+//                System.out.println(m.toString());
                 if (m.getSenderId() != peer.getId() && m.getType() == MessageType.PUTCHUNK) {
                     peer.receive(m);
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

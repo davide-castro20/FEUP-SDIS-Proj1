@@ -28,6 +28,9 @@ public class Peer implements PeerStub {
     Channel MDBChannel;
     Channel MDRChannel;
 
+    Thread MDBthread;
+    boolean stoppedMDB;
+
     ConcurrentMap<String, Chunk> storedChunks;
     ConcurrentMap<String, FileInfo> files; // FileHash -> FileInfo
     ConcurrentMap<String, ScheduledFuture<?>> messagesToSend;
@@ -64,17 +67,14 @@ public class Peer implements PeerStub {
         Channel MDRchannel = new Channel(MDRinfo[0], Integer.parseInt(MDRinfo[1]));
 
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
-        peer.bindRMI();
 
         peer.synchronizer.scheduleAtFixedRate(new Synchronizer(peer), 0, 2, TimeUnit.SECONDS);
 
-        new Thread(new MC(peer)).start();
-        new Thread(new MDR(peer)).start();
-        new Thread(new MDB(peer)).start();
+
 
     }
 
-    public Peer(int id, String protocolVersion, String serviceAccessPointName, Channel MCChannel, Channel MDBChannel, Channel MDRChannel) {
+    public Peer(int id, String protocolVersion, String serviceAccessPointName, Channel MCChannel, Channel MDBChannel, Channel MDRChannel) throws AlreadyBoundException, RemoteException {
         this.id = id;
         this.protocolVersion = protocolVersion;
         this.serviceAccessPointName = serviceAccessPointName;
@@ -102,6 +102,14 @@ public class Peer implements PeerStub {
         this.tcp_ports = IntStream.range(40000 + 100*(id-1), 40000 + 100*id).boxed()
                 .collect(Collectors.toCollection(ConcurrentLinkedQueue::new));
         this.tcpConnections = new ConcurrentHashMap<>();
+
+        this.bindRMI();
+
+        new Thread(new MC(this)).start();
+        new Thread(new MDR(this)).start();
+        this.MDBthread = new Thread(new MDB(this));
+        this.MDBthread.start();
+        this.stoppedMDB = false;
     }
 
 
@@ -168,7 +176,7 @@ public class Peer implements PeerStub {
         return new PeerState(maxSpace, currentSpace, storedChunks, files);
     }
 
-    public static String getFileIdString(String path) {
+    public static String getFileIdString(String path, int peerID) {
         MessageDigest digest = null;
 
         File file = new File(path);
@@ -178,7 +186,7 @@ public class Peer implements PeerStub {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        byte[] hash = digest.digest((path + file.lastModified()).getBytes());
+        byte[] hash = digest.digest((path + file.lastModified() + peerID).getBytes());
 
         StringBuilder result = new StringBuilder();
         for (byte b : hash) {
@@ -232,13 +240,59 @@ public class Peer implements PeerStub {
 
     public long getCurrentSpace() { return currentSpace; } // bytes
 
-    public long addSpace(long space) { currentSpace += space; return currentSpace; }
+    public long addSpace(long space) {
+        currentSpace += space;
+        if(Peer.supportsEnhancement(protocolVersion, Enhancements.BACKUP)) {
+            if(currentSpace == maxSpace && !stoppedMDB) {
+                try {
+                    this.interruptMDB();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
-    public long removeSpace(long space) { currentSpace -= space; return currentSpace; }
+            System.out.println(stoppedMDB);
+        }
+        return currentSpace;
+    }
+
+    public long removeSpace(long space) {
+        currentSpace -= space;
+
+        if(Peer.supportsEnhancement(protocolVersion, Enhancements.BACKUP)) {
+            if (currentSpace < maxSpace && stoppedMDB) {
+                try {
+                    this.restartMDB();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            System.out.println(stoppedMDB);
+        }
+
+        return currentSpace;
+    }
 
     public long getMaxSpace() { return maxSpace; } // in bytes
 
-    public void setMaxSpace(long maxSpace) { this.maxSpace = maxSpace; }
+    public void setMaxSpace(long maxSpace) {
+        this.maxSpace = maxSpace;
+
+        if(Peer.supportsEnhancement(protocolVersion, Enhancements.BACKUP)) {
+            try {
+                if(currentSpace == maxSpace && !stoppedMDB)
+                    this.interruptMDB();
+                else if(currentSpace < maxSpace && stoppedMDB) {
+                    this.restartMDB();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            System.out.println(stoppedMDB);
+        }
+    }
 
     public double getRemainingSpace() { return maxSpace - currentSpace; }; // in bytes
 
@@ -259,13 +313,35 @@ public class Peer implements PeerStub {
             case "1.1":
                 return enhancement == Enhancements.RESTORE;
             case "1.2":
+                return enhancement == Enhancements.BACKUP;
             case "1.3":
+                return enhancement == Enhancements.DELETE;
             default:
                 break;
         }
 
         return false;
     }
+
+    public Thread getMDBthread() { return MDBthread; }
+
+    public void interruptMDB() throws IOException {
+        System.out.println("INTERRUPTING MDB");
+//        MDBthread.interrupt();
+        this.stoppedMDB = true;
+        MDBChannel.leaveGroup();
+    }
+    public void restartMDB() throws IOException {
+        System.out.println("RESTARTING MDB");
+        MDBChannel.joinGroup();
+        if(this.stoppedMDB) {
+            stoppedMDB = false;
+            MDBthread = new Thread(new MDB(this));
+            MDBthread.start();
+        }
+    }
+
+    public boolean getStoppedMDB() { return stoppedMDB; }
 }
 
 

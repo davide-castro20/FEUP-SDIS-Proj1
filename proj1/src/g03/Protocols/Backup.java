@@ -27,7 +27,7 @@ public class Backup implements Runnable {
         if(!fileToBackup.exists() || fileToBackup.isDirectory() || fileToBackup.length() > 64000000000L)
             return;
 
-        String hash = Peer.getFileIdString(path);
+        String hash = Peer.getFileIdString(path, peer.getId());
         String[] msgArgs = {this.peer.getProtocolVersion(),
                 String.valueOf(this.peer.getId()),
                 hash,
@@ -58,7 +58,6 @@ public class Backup implements Runnable {
                 this.peer.getPool().execute(new PutChunkMessageSender(this.peer, msgToSend, replicationDegree, 5));
             }
 
-            //TODO: Maybe wait for threads
             FileInfo fileInfo = new FileInfo(path, hash, replicationDegree, nChunk);
             if(this.peer.getFiles().containsKey(hash)) {
                 fileInfo.setChunksPeers(this.peer.getFiles().get(hash).getChunksPeers());
