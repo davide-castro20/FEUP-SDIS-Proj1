@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 public class ChunkMessageSender implements Runnable {
 
@@ -30,8 +29,7 @@ public class ChunkMessageSender implements Runnable {
         }
 
         if(port != -1) {
-            try {
-                Socket socket = new Socket(InetAddress.getLocalHost(), port);
+            try (Socket socket = new Socket(InetAddress.getLocalHost(), port)){
 
                 byte[] body;
                 try (FileInputStream file = new FileInputStream("backup/" + toSend.getFileId() + "-" + toSend.getChunkNumber());
@@ -41,7 +39,6 @@ public class ChunkMessageSender implements Runnable {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                socket.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }

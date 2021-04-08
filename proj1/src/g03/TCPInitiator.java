@@ -3,6 +3,7 @@ package g03;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 
 public class TCPInitiator implements Runnable {
@@ -20,9 +21,11 @@ public class TCPInitiator implements Runnable {
 
     @Override
     public void run() {
-        try (ServerSocket serverSocket = new ServerSocket(port);
-             Socket clientSocket = serverSocket.accept()) {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            serverSocket.setSoTimeout(2000);
+            Socket clientSocket = serverSocket.accept();
 
+            System.out.println("CHUNK NUMBER: " + chunkNumber + " TCP");
             peer.getChunksToRestore().get(fileHash).remove(Integer.valueOf(chunkNumber));
 
             BufferedInputStream in = new BufferedInputStream(clientSocket.getInputStream());
@@ -30,13 +33,14 @@ public class TCPInitiator implements Runnable {
             byte[] readData = new byte[64000];
             int nRead;
 
-            FileOutputStream outChunk = new FileOutputStream("backup/" + fileHash + "-" + chunkNumber);
+            FileOutputStream outChunk = new FileOutputStream("restore/" + fileHash + "-" + chunkNumber);
             while ((nRead = in.read(readData, 0, 64000)) > 0) {
                 byte[] toWrite = Arrays.copyOf(readData, nRead);
                 outChunk.write(toWrite);
             }
             in.close();
             outChunk.close();
+            clientSocket.close();
 
             if (peer.getChunksToRestore().containsKey(fileHash) && peer.getChunksToRestore().get(fileHash).size() == 0) {
                 peer.getChunksToRestore().remove(fileHash);
@@ -48,10 +52,10 @@ public class TCPInitiator implements Runnable {
                 try (FileOutputStream out = new FileOutputStream(fileInfo.getPath() + "-restored")) {
                     for (int i = 0; i < fileInfo.getChunkAmount(); i++) {
                         System.out.println(fileHash + "-" + i);
-                        try (FileInputStream inChunk = new FileInputStream("backup/" + fileHash + "-" + i)) {
+                        try (FileInputStream inChunk = new FileInputStream("restore/" + fileHash + "-" + i)) {
                             inChunk.transferTo(out);
                             inChunk.close();
-                            File chunk = new File("backup/" + fileHash + "-" + i);
+                            File chunk = new File("restore/" + fileHash + "-" + i);
                             chunk.delete();
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -61,6 +65,7 @@ public class TCPInitiator implements Runnable {
                 }
             }
 
+        } catch(SocketTimeoutException ignored) {
         } catch (Exception e) {
             e.printStackTrace();
         }

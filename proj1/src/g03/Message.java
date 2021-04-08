@@ -29,8 +29,12 @@ public class Message {
             this.replicationDegree = Integer.parseInt(header[5]);
 
         int indexBody = packetStr.indexOf("\r\n\r\n");
-        if(indexBody + 4 >= packet.length)
-            this.body = null;
+        if(indexBody + 4 >= packet.length) {
+            if(type == MessageType.PUTCHUNK)
+                this.body = new byte[0];
+            else
+                this.body = null;
+        }
         else
             this.body = Arrays.copyOfRange(packet, indexBody + 4, packet.length);
 

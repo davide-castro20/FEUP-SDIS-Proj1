@@ -24,7 +24,7 @@ public class ReceiveChunk implements Runnable {
     public void run() {
         String key = message.getFileId() + "-" + message.getChunkNumber();
 
-
+        System.out.println("RECEIVING " + key);
 
         if(!peer.getChunks().containsKey(key)) {
 
@@ -32,32 +32,27 @@ public class ReceiveChunk implements Runnable {
             if(fileInThisPeer.count() > 0) {
                 return;
             }
+            try {
+                // will store if there is enough space in the peer
+                if (peer.getRemainingSpace() >= message.getBody().length) {
 
-            // will store if there is enough space in the peer
-            if(peer.getRemainingSpace() >= message.getBody().length) {
-                peer.addSpace(message.getBody().length);
+                    peer.addSpace(message.getBody().length);
 
-                if(message.getBody().length > 0) {
                     try (FileOutputStream out = new FileOutputStream("backup/" + key)) {
                         out.write(message.getBody());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                } else {
-                    File file = new File(key);
-                    try {
-                        file.createNewFile();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+
+                    Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree(), message.getBody().length);
+                    c.addPeer(peer.getId()); //set itself as peer
+
+                    this.peer.getChunks().put(key, c);
+
+                    this.sendStoredMessage();
                 }
-
-                Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree(), message.getBody().length);
-                c.addPeer(peer.getId()); //set itself as peer
-
-                this.peer.getChunks().put(key, c);
-
-                this.sendStoredMessage();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         } else { //if the peer already has the chunk
             this.sendStoredMessage();
