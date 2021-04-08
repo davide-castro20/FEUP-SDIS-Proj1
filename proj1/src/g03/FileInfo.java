@@ -41,4 +41,6 @@ public class FileInfo implements Serializable {
     public List<Chunk> getChunksPeers() {
         return chunksPeers;
     }
+
+    public void setChunksPeers(List<Chunk> chunksPeers) { this.chunksPeers = chunksPeers; }
 }

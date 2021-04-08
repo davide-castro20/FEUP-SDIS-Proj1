@@ -5,6 +5,7 @@ import g03.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -58,9 +59,12 @@ public class Backup implements Runnable {
             }
 
             //TODO: Maybe wait for threads
-//            if (!this.peer.getFiles().containsKey(path)) {
-                this.peer.getFiles().put(hash, new FileInfo(path, hash, replicationDegree, nChunk));
-//            }
+            FileInfo fileInfo = new FileInfo(path, hash, replicationDegree, nChunk);
+            if(this.peer.getFiles().containsKey(hash)) {
+                fileInfo.setChunksPeers(this.peer.getFiles().get(hash).getChunksPeers());
+            }
+            this.peer.getFiles().put(hash, fileInfo);
+
         } catch (Exception e) {
             e.printStackTrace();
         }

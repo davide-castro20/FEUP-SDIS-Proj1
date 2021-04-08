@@ -14,8 +14,7 @@ public class Synchronizer implements Runnable {
     @Override
     public void run() {
         checkFiles();
-        writeChunkData();
-        writeFileData();
+        writePeerState();
     }
 
     private void checkFiles() {
@@ -27,22 +26,12 @@ public class Synchronizer implements Runnable {
         }
     }
 
-    private void writeChunkData() {
-        try(FileOutputStream fileOutChunks = new FileOutputStream("chunkData");
-            ObjectOutputStream outChunks = new ObjectOutputStream(fileOutChunks))
-        {
-            outChunks.writeObject(peer.getChunks());
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void writeFileData() {
-        try(FileOutputStream fileOutFiles = new FileOutputStream("fileData");
+    private void writePeerState() {
+        try(FileOutputStream fileOutFiles = new FileOutputStream("peerState");
             ObjectOutputStream outFiles = new ObjectOutputStream(fileOutFiles))
         {
-            outFiles.writeObject(peer.getFiles());
+            PeerState peerState = peer.state();
+            outFiles.writeObject(peerState);
 
         } catch (IOException e) {
             e.printStackTrace();

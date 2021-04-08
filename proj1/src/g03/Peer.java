@@ -34,6 +34,8 @@ public class Peer implements PeerStub {
     ConcurrentMap<String, ScheduledFuture<?>> backupsToSend; //FOR THE RECLAIM PROTOCOL
     ConcurrentMap<String, List<Integer>> chunksToRestore;
 
+    Set<Runnable> ongoing;
+
     ConcurrentMap<String, ScheduledFuture<?>> tcpConnections;
 
     ConcurrentLinkedQueue<Integer> tcp_ports;
@@ -64,7 +66,7 @@ public class Peer implements PeerStub {
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
         peer.bindRMI();
 
-        peer.synchronizer.scheduleAtFixedRate(new Synchronizer(peer), 0, 30, TimeUnit.SECONDS);
+        peer.synchronizer.scheduleAtFixedRate(new Synchronizer(peer), 0, 2, TimeUnit.SECONDS);
 
         new Thread(new MC(peer)).start();
         new Thread(new MDR(peer)).start();
@@ -87,29 +89,31 @@ public class Peer implements PeerStub {
         this.backupsToSend = new ConcurrentHashMap<>();
         this.chunksToRestore = new ConcurrentHashMap<>();
 
+        this.ongoing = new HashSet<>();
+
         this.pool = Executors.newScheduledThreadPool(16);
         this.synchronizer = Executors.newSingleThreadScheduledExecutor();
 
-        this.readChunkFileData();
-        this.checkChunks();
+        this.readState();
+
+//        this.checkChunks();
+
 
         this.tcp_ports = IntStream.range(40000 + 100*(id-1), 40000 + 100*id).boxed()
                 .collect(Collectors.toCollection(ConcurrentLinkedQueue::new));
         this.tcpConnections = new ConcurrentHashMap<>();
     }
 
-    private void readChunkFileData() {
-        try (FileInputStream fileInChunks = new FileInputStream("chunkData");
-             ObjectInputStream chunksIn = new ObjectInputStream(fileInChunks)) {
-            this.storedChunks = (ConcurrentMap) chunksIn.readObject();
-        } catch (FileNotFoundException ignored) {
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
 
-        try (FileInputStream fileInFile = new FileInputStream("fileData");
-             ObjectInputStream filesIn = new ObjectInputStream(fileInFile)) {
-            this.files = (ConcurrentMap) filesIn.readObject();
+    private void readState() {
+        try (FileInputStream stateIn = new FileInputStream("peerState");
+             ObjectInputStream stateInObject = new ObjectInputStream(stateIn)) {
+                PeerState peerState = (PeerState) stateInObject.readObject();
+                currentSpace = peerState.currentSpace;
+                maxSpace = peerState.maxSpace;
+                storedChunks = (ConcurrentMap)peerState.storedChunks;
+                files = (ConcurrentMap)peerState.files;
+
         } catch (FileNotFoundException ignored) {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
