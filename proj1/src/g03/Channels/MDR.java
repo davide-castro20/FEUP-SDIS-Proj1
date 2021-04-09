@@ -66,6 +66,7 @@ public class MDR implements Runnable {
                                             }
 
                                         }
+                                        peer.getOngoing().remove("restore-" + fileInfo.getPath());
                                     }
                                 }
 

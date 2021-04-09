@@ -55,6 +55,9 @@ public class Delete implements Runnable {
                 }
                 peer.getPeersDidNotDeleteFiles().put(hash, peers);
             }
+
+            peer.getOngoing().remove("delete-" + path);
+
         });
 
         if(deleted.get()) {

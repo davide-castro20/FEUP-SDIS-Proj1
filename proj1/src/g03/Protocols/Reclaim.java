@@ -24,6 +24,7 @@ public class Reclaim implements Runnable {
                 .takeWhile(m -> peer.getCurrentSpace() > space)
                 .forEach(this::removeChunk);
         peer.setMaxSpace(space);
+        peer.getOngoing().remove("reclaim-" + space);
     }
 
     private void removeChunk(Map.Entry<String, Chunk> stringChunkEntry) {

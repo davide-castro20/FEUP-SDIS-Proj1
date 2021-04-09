@@ -42,7 +42,7 @@ public class Peer implements PeerStub {
     ConcurrentMap<String, ScheduledFuture<?>> backupsToSend; //FOR THE RECLAIM PROTOCOL
     ConcurrentMap<String, List<Integer>> chunksToRestore;
 
-    Set<Runnable> ongoing;
+    Set<String> ongoing;
 
     //Used for the RESTORE Enhancement
     ConcurrentMap<String, ScheduledFuture<?>> tcpConnections;
@@ -117,6 +117,8 @@ public class Peer implements PeerStub {
         this.MDBthread = new Thread(new MDB(this));
         this.MDBthread.start();
         this.stoppedMDB = false;
+
+        this.checkOperations();
     }
 
 
@@ -129,6 +131,7 @@ public class Peer implements PeerStub {
                 storedChunks = (ConcurrentMap)peerState.storedChunks;
                 files = (ConcurrentMap)peerState.files;
                 peersDidNotDeleteFiles = (ConcurrentMap)peerState.peersDidNotDeleteFiles;
+                ongoing = peerState.onGoingOperations;
         } catch (FileNotFoundException ignored) {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -153,6 +156,27 @@ public class Peer implements PeerStub {
         }
     }
 
+    private void checkOperations() {
+        for(String op : ongoing) {
+            String[] opElems = op.split("-");
+            switch (opElems[0]) {
+                case "backup":
+                    break;
+                case "restore":
+                    this.restore(opElems[1]);
+                    break;
+                case "delete":
+                    this.delete(opElems[1]);
+                    break;
+                case "reclaim":
+                    this.reclaim(Long.parseLong(opElems[1]));
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
     public void bindRMI() throws RemoteException, AlreadyBoundException {
         PeerStub stub = (PeerStub) UnicastRemoteObject.exportObject(this, 0);
 
@@ -168,31 +192,47 @@ public class Peer implements PeerStub {
 
     @Override
     public void backup(String path, int replicationDegree) {
+        String opName = "backup-" + path + "-" + replicationDegree;
+        if(ongoing.contains(opName)) //if a similar operation is ongoing
+            return;
+
         Backup backupRun = new Backup(this, path, replicationDegree);
         pool.execute(backupRun);
     }
 
     @Override
     public void restore(String path) {
+        String opName = "restore-" + path;
+        if(ongoing.contains(opName)) //if a similar operation is ongoing
+            return;
+
         Restore restoreRun = new Restore(this, path);
         pool.execute(restoreRun);
     }
 
     @Override
     public void delete(String path) {
+        String opName = "delete-" + path;
+        if(ongoing.contains(opName)) //if a similar operation is ongoing
+            return;
+
         Delete deleteRun = new Delete(this, path);
         pool.execute(deleteRun);
     }
 
     @Override
     public void reclaim(long amountOfKBytes) {
+        String opName = "reclaim-" + amountOfKBytes;
+        if(ongoing.contains(opName)) //if a similar operation is ongoing
+            return;
+
         Reclaim reclaimRun = new Reclaim(this, amountOfKBytes * 1000);
         pool.execute(reclaimRun);
     }
 
     @Override
     public PeerState state() throws RemoteException {
-        return new PeerState(maxSpace, currentSpace, storedChunks, files, peersDidNotDeleteFiles);
+        return new PeerState(maxSpace, currentSpace, storedChunks, files, peersDidNotDeleteFiles, ongoing);
     }
 
     public static String getFileIdString(String path, int peerID) {
@@ -365,6 +405,8 @@ public class Peer implements PeerStub {
     public ConcurrentMap<String, Set<Integer>> getPeersDidNotDeleteFiles() {
         return peersDidNotDeleteFiles;
     }
+
+    public Set<String> getOngoing() { return ongoing; }
 }
 
 

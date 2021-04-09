@@ -13,14 +13,16 @@ public class PeerState implements Serializable {
     Map<String, Chunk> storedChunks;
     Map<String, FileInfo> files; // FileHash -> FileInfo
     Map<String, Set<Integer>> peersDidNotDeleteFiles;
+    Set<String> onGoingOperations;
 
 
-    public PeerState(long maxSpace, long currentSpace, Map<String, Chunk> storedChunks, Map<String, FileInfo> files, Map<String, Set<Integer>> deleted) {
+    public PeerState(long maxSpace, long currentSpace, Map<String, Chunk> storedChunks, Map<String, FileInfo> files, Map<String, Set<Integer>> deleted, Set<String> ongoing) {
         this.maxSpace = maxSpace;
         this.currentSpace = currentSpace;
         this.storedChunks = storedChunks;
         this.files = files;
         this.peersDidNotDeleteFiles = deleted;
+        this.onGoingOperations = ongoing;
     }
 
     @Override
