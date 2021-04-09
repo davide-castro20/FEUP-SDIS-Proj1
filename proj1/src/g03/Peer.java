@@ -161,6 +161,7 @@ public class Peer implements PeerStub {
             String[] opElems = op.split("-");
             switch (opElems[0]) {
                 case "backup":
+                    this.backup(opElems[1], Integer.parseInt(opElems[2]));
                     break;
                 case "restore":
                     this.restore(opElems[1]);

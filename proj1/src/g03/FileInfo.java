@@ -42,4 +42,12 @@ public class FileInfo implements Serializable {
     }
 
     public void setChunksPeers(List<Chunk> chunksPeers) { this.chunksPeers = chunksPeers; }
+
+    public boolean allSent() {
+        for(Chunk chunk : chunksPeers) {
+            if(!chunk.isSent())
+                return false;
+        }
+        return true;
+    }
 }

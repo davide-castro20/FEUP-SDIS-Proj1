@@ -11,6 +11,7 @@ public class Chunk implements Serializable, Comparable<Chunk> {
     int desiredReplicationDegree;
     Set<Integer> peers;
     int size;
+    boolean sent = false;
 
     public Chunk(String fileId, int chunkNumber, int desiredReplicationDegree, int size) {
         this.fileId = fileId;
@@ -63,4 +64,8 @@ public class Chunk implements Serializable, Comparable<Chunk> {
         } else
             return otherExcess - excessReplication;
     }
+
+    public boolean isSent() { return sent; }
+
+    public void setSent() { sent = true; }
 }

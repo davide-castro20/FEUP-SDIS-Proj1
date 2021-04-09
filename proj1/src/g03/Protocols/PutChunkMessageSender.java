@@ -1,5 +1,6 @@
 package g03.Protocols;
 
+import g03.FileInfo;
 import g03.Messages.Message;
 import g03.Peer;
 
@@ -40,6 +41,15 @@ public class PutChunkMessageSender implements Runnable {
                 System.out.println("SENDING ^");
                 this.peer.getMDB().send(message);
                 this.peer.getPool().schedule(this, (int)Math.pow(2, currentIteration), TimeUnit.SECONDS);
+            } else { //set this chunk as sent
+                if(this.peer.getFiles().containsKey(message.getFileId())) {
+                    FileInfo fileInfo = peer.getFiles().get(message.getFileId());
+                    fileInfo.getChunksPeers().get(message.getChunkNumber()).setSent();
+
+                    //check if operation is over
+                    if(fileInfo.allSent())
+                        peer.getOngoing().remove("backup-" + fileInfo.getPath() + "-" + fileInfo.getDesiredReplicationDegree());
+                }
             }
 
         } catch (IOException e) {
