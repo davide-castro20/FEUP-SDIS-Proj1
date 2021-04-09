@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="TestApp STATE 1" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="g03.TestApp" />
+    <module name="proj1" />
+    <option name="PROGRAM_PARAMETERS" value="Peer1 STATE" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

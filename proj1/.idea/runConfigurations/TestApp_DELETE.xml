@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="TestApp DELETE" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="g03.TestApp" />
+    <module name="proj1" />
+    <option name="PROGRAM_PARAMETERS" value="Peer1 DELETE teste150k" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
