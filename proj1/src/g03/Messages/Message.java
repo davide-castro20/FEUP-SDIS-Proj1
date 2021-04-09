@@ -26,7 +26,7 @@ public class Message {
         this.senderId = Integer.parseInt(header[2]);
         this.fileId = header[3];
 
-        if(this.type != MessageType.DELETE)
+        if(this.type != MessageType.DELETE && this.type != MessageType.DELETED)
             this.chunkNumber = Integer.parseInt(header[4]);
         if(this.type == MessageType.PUTCHUNK)
             this.replicationDegree = Integer.parseInt(header[5]);

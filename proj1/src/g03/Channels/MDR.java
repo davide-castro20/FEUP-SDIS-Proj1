@@ -24,6 +24,9 @@ public class MDR implements Runnable {
                     continue;
                 Message m = new Message(packet);
 
+                if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE))
+                    peer.checkDeleted(m);
+
                 if (m.getSenderId() != peer.getId() && m.getType() == MessageType.CHUNK
                         && (!Peer.supportsEnhancement(m.getProtocolVersion(), Enhancements.RESTORE) || !Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE))) {
                     //TODO: maybe refactor this

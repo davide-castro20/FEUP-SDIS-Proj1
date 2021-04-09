@@ -1,6 +1,7 @@
 package g03.Protocols;
 
 import g03.*;
+import g03.Enchancements.Enhancements;
 import g03.Messages.Message;
 import g03.Messages.MessageType;
 
@@ -25,12 +26,16 @@ public class Backup implements Runnable {
         if(!fileToBackup.exists() || fileToBackup.isDirectory() || fileToBackup.length() > 64000000000L)
             return;
 
+
         String hash = Peer.getFileIdString(path, peer.getId());
         String[] msgArgs = {this.peer.getProtocolVersion(),
                 String.valueOf(this.peer.getId()),
                 hash,
                 "0", // CHUNK NO
                 String.valueOf(replicationDegree)};
+
+        if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE))
+            peer.getPeersDidNotDeleteFiles().remove(hash);
 
         byte[] data;
         int nRead = -1;

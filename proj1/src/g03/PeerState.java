@@ -2,6 +2,8 @@ package g03;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 
 public class PeerState implements Serializable {
 
@@ -10,13 +12,15 @@ public class PeerState implements Serializable {
 
     Map<String, Chunk> storedChunks;
     Map<String, FileInfo> files; // FileHash -> FileInfo
+    Map<String, Set<Integer>> peersDidNotDeleteFiles;
 
 
-    public PeerState(long maxSpace, long currentSpace, Map<String, Chunk> storedChunks, Map<String, FileInfo> files) {
+    public PeerState(long maxSpace, long currentSpace, Map<String, Chunk> storedChunks, Map<String, FileInfo> files, Map<String, Set<Integer>> deleted) {
         this.maxSpace = maxSpace;
         this.currentSpace = currentSpace;
         this.storedChunks = storedChunks;
         this.files = files;
+        this.peersDidNotDeleteFiles = deleted;
     }
 
     @Override
@@ -48,6 +52,17 @@ public class PeerState implements Serializable {
         result += "------------------STORAGE------------------\n";
         result += "Total Capacity: " + this.maxSpace / 1000 + "KB\n";
         result += "Current used space: " + this.currentSpace / 1000 + "KB\n";
+
+        result += "---------------Peer to Delete---------------\n";
+        for (Map.Entry<String, Set<Integer>> entry : peersDidNotDeleteFiles.entrySet()){
+            result += "-------------File---------------\n";
+            result += "File Hash: " + entry.getKey() + "\n";
+            result += "Peers left to delete: ";
+            for(Integer peer : entry.getValue()) {
+                result += peer + ", ";
+            }
+            result += "\n";
+        }
 
         return result;
     }

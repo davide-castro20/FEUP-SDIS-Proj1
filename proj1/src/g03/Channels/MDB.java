@@ -1,5 +1,6 @@
 package g03.Channels;
 
+import g03.Enchancements.Enhancements;
 import g03.Messages.Message;
 import g03.Messages.MessageType;
 import g03.Peer;
@@ -21,8 +22,11 @@ public class MDB implements Runnable {
                 byte[] packet = peer.getMDB().receive();
                 if(packet == null)
                     continue;
-                System.out.println(Arrays.toString(packet));
+//                System.out.println(Arrays.toString(packet));
                 Message m = new Message(packet);
+
+                if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE))
+                    peer.checkDeleted(m);
 //                System.out.println(m.toString());
                 if (m.getSenderId() != peer.getId() && m.getType() == MessageType.PUTCHUNK) {
                     peer.receive(m);

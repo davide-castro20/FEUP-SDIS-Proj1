@@ -50,10 +50,8 @@ public class Delete implements Runnable {
             if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE)) {
                 Set<Integer> peers = new HashSet<>();
 
-                for (Map.Entry<String, FileInfo> entry : peer.getFiles().entrySet()) {
-                    for (Chunk c : entry.getValue().getChunksPeers()){
-                        peers.addAll(c.getPeers());
-                    }
+                for(Chunk c : match.getValue().getChunksPeers()) {
+                    peers.addAll(c.getPeers());
                 }
                 peer.getPeersDidNotDeleteFiles().put(hash, peers);
             }

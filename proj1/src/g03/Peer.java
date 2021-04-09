@@ -6,6 +6,7 @@ import g03.Channels.MDB;
 import g03.Channels.MDR;
 import g03.Enchancements.Enhancements;
 import g03.Messages.Message;
+import g03.Messages.MessageType;
 import g03.Protocols.*;
 
 import java.io.*;
@@ -31,6 +32,7 @@ public class Peer implements PeerStub {
     Channel MDBChannel;
     Channel MDRChannel;
 
+    // FOR BACKUP ENHANCEMENT
     Thread MDBthread;
     boolean stoppedMDB;
 
@@ -46,7 +48,7 @@ public class Peer implements PeerStub {
     ConcurrentMap<String, ScheduledFuture<?>> tcpConnections;
 
     //Used for the DELETE Enhancement
-    ConcurrentMap<String, Set<Integer>> peersDidNotDeleteFiles;
+    ConcurrentMap<String, Set<Integer>> peersDidNotDeleteFiles; //
 
     ConcurrentLinkedQueue<Integer> tcp_ports;
     ScheduledExecutorService pool;
@@ -75,7 +77,7 @@ public class Peer implements PeerStub {
 
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
 
-        peer.synchronizer.scheduleAtFixedRate(new Synchronizer(peer), 0, 2, TimeUnit.SECONDS);
+        peer.synchronizer.scheduleAtFixedRate(new Synchronizer(peer), 0, 1, TimeUnit.SECONDS);
 
     }
 
@@ -99,16 +101,14 @@ public class Peer implements PeerStub {
         this.pool = Executors.newScheduledThreadPool(16);
         this.synchronizer = Executors.newSingleThreadScheduledExecutor();
 
-        this.readState();
-
-//        this.checkChunks();
-
         //TODO: Start with port 0
         this.tcp_ports = IntStream.range(40000 + 100*(id-1), 40000 + 100*id).boxed()
                 .collect(Collectors.toCollection(ConcurrentLinkedQueue::new));
         this.tcpConnections = new ConcurrentHashMap<>();
 
         this.peersDidNotDeleteFiles = new ConcurrentHashMap<>();
+
+        this.readState();
 
         this.bindRMI();
 
@@ -128,16 +128,28 @@ public class Peer implements PeerStub {
                 maxSpace = peerState.maxSpace;
                 storedChunks = (ConcurrentMap)peerState.storedChunks;
                 files = (ConcurrentMap)peerState.files;
-
+                peersDidNotDeleteFiles = (ConcurrentMap)peerState.peersDidNotDeleteFiles;
         } catch (FileNotFoundException ignored) {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    private void checkChunks() {
-        for(Map.Entry<String, Chunk> storedChunk : storedChunks.entrySet()) {
+    public void checkDeleted(Message message) {
+        for(Map.Entry<String, Set<Integer>> deletedFiles : peersDidNotDeleteFiles.entrySet()) {
+            if(deletedFiles.getValue().contains(message.getSenderId())) {
 
+                String[] msgArgs = {protocolVersion,
+                        String.valueOf(id),
+                        deletedFiles.getKey()};
+                Message deleteMsg = new Message(MessageType.DELETE, msgArgs, null);
+
+                try {
+                    MCChannel.send(deleteMsg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -180,7 +192,7 @@ public class Peer implements PeerStub {
 
     @Override
     public PeerState state() throws RemoteException {
-        return new PeerState(maxSpace, currentSpace, storedChunks, files);
+        return new PeerState(maxSpace, currentSpace, storedChunks, files, peersDidNotDeleteFiles);
     }
 
     public static String getFileIdString(String path, int peerID) {

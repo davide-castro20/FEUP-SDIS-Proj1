@@ -34,6 +34,10 @@ public class MC implements Runnable {
 
                 if (message.getSenderId() == peer.getId())
                     continue;
+
+                if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE))
+                    peer.checkDeleted(message);
+
                 //TODO: refactor - maybe change this to runnable classes
                 Runnable run = null;
                 switch (message.getType()) {
@@ -122,8 +126,13 @@ public class MC implements Runnable {
 
                         break;
                     case DELETED:
-                        if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE)){
-
+                        if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE)) {
+                            if(peer.getPeersDidNotDeleteFiles().containsKey(message.getFileId())) {
+                                peer.getPeersDidNotDeleteFiles().get(message.getFileId()).remove(message.getSenderId());
+                                if(peer.getPeersDidNotDeleteFiles().get(message.getFileId()).size() == 0) {
+                                    peer.getPeersDidNotDeleteFiles().remove(message.getFileId());
+                                }
+                            }
                         }
                         break;
                     case REMOVED:
