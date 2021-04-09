@@ -1,16 +1,19 @@
-package g03.ChannelRunnables;
+package g03.Channels;
 
 import g03.*;
+import g03.Enchancements.Enhancements;
+import g03.Messages.Message;
+import g03.Messages.MessageType;
+import g03.Protocols.ChunkMessageSender;
+import g03.Protocols.PutChunkMessageSender;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 public class MC implements Runnable {
 
@@ -47,10 +50,6 @@ public class MC implements Runnable {
                              } else if(peer.getFiles().containsKey(message.getFileId())) { //if this peer has the original file
                                 peer.getFiles().get(message.getFileId()).getChunksPeers().get(message.getChunkNumber()).addPeer(message.getSenderId());
                              }
-//                            else { //IDK what this else means
-//                                Chunk c = new Chunk(message.getFileId(), message.getChunkNumber(), message.getReplicationDegree());
-//                                peer.getChunks().put(key, c);
-//                            }
                         };
                         break;
 
@@ -151,7 +150,7 @@ public class MC implements Runnable {
                                             }
                                         }, new Random().nextInt(400), TimeUnit.MILLISECONDS);
                                         peer.getBackupsToSend().put(key, task);
-                                        System.out.println(peer.getBackupsToSend().keySet().toString());
+                                        System.out.println(peer.getBackupsToSend().keySet());
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }

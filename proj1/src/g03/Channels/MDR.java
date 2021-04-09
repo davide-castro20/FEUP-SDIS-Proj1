@@ -1,9 +1,11 @@
-package g03.ChannelRunnables;
+package g03.Channels;
 
 import g03.*;
+import g03.Enchancements.Enhancements;
+import g03.Messages.Message;
+import g03.Messages.MessageType;
 
 import java.io.*;
-import java.util.Arrays;
 
 public class MDR implements Runnable {
 
@@ -25,7 +27,7 @@ public class MDR implements Runnable {
                 if (m.getSenderId() != peer.getId() && m.getType() == MessageType.CHUNK
                         && (!Peer.supportsEnhancement(m.getProtocolVersion(), Enhancements.RESTORE) || !Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE))) {
                     //TODO: maybe refactor this
-                    Runnable run = null;
+                    Runnable run;
                     run = () -> {
                         try {
                             System.out.println("CHUNK NUMBER: " + m.getChunkNumber());

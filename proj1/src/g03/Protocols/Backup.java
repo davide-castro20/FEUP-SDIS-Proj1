@@ -1,13 +1,11 @@
 package g03.Protocols;
 
 import g03.*;
+import g03.Messages.Message;
+import g03.Messages.MessageType;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class Backup implements Runnable {
     private final Peer peer;

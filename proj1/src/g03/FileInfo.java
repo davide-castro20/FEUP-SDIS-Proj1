@@ -3,13 +3,12 @@ package g03;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class FileInfo implements Serializable {
 
-    private String path;
-    private String hash;
-    private int desiredReplicationDegree;
+    private final String path;
+    private final String hash;
+    private final int desiredReplicationDegree;
     private List<Chunk> chunksPeers;
 
     public FileInfo(String path, String hash, int desiredReplicationDegree, int chunkAmount) {

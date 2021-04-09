@@ -1,10 +1,9 @@
-package g03;
+package g03.Channels;
+
+import g03.Messages.Message;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketTimeoutException;
+import java.net.*;
 import java.util.Arrays;
 
 public class Channel {
@@ -32,19 +31,19 @@ public class Channel {
         DatagramPacket packet = new DatagramPacket(mrbuf, mrbuf.length);
         try {
             this.socket.receive(packet);
-        } catch (SocketTimeoutException ignored) { return null;}
+        } catch (SocketTimeoutException | SocketException ignored) { return null;}
 
         return Arrays.copyOf(mrbuf, packet.getLength());
     }
 
     public void leaveGroup() throws IOException {
-//        socket.leaveGroup(this.group);
-//        socket.close();
+        socket.leaveGroup(this.group);
+        socket.close();
     }
 
     public void joinGroup() throws IOException {
-//        socket = new MulticastSocket(this.port);
-//        socket.joinGroup(this.group);
-//        socket.setSoTimeout(100);
+        socket = new MulticastSocket(this.port);
+        socket.joinGroup(this.group);
+        socket.setSoTimeout(100);
     }
 }

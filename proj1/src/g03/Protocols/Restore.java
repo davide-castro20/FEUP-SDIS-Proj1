@@ -1,8 +1,11 @@
 package g03.Protocols;
 
 import g03.*;
+import g03.Enchancements.Enhancements;
+import g03.Enchancements.TCPInitiator;
+import g03.Messages.Message;
+import g03.Messages.MessageType;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,7 +54,7 @@ public class Restore implements Runnable {
                 }
                 System.out.println("MAKING GETCHUNK MESSAGE " + msgArgs.toString());
                 msgToSend = new Message(MessageType.GETCHUNK, msgArgs.toArray(new String[0]), null);
-                System.out.println("SENDING GETCHUNK " + msgArgs.toArray(new String[0]).toString());
+                System.out.println("SENDING GETCHUNK " + Arrays.toString(msgArgs.toArray(new String[0])));
                 this.peer.getMC().send(msgToSend);
 
             } catch (Exception e) {

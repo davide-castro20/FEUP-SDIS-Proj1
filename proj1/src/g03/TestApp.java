@@ -12,7 +12,7 @@ public class TestApp {
 
         String accessPoint = args[0];
 
-        Registry registry = null;
+        Registry registry;
         try {
             registry = LocateRegistry.getRegistry();
             PeerStub stub = (PeerStub) registry.lookup(accessPoint);

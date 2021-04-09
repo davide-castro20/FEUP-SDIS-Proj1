@@ -1,4 +1,7 @@
-package g03;
+package g03.Messages;
+
+import g03.Enchancements.Enhancements;
+import g03.Peer;
 
 import java.util.Arrays;
 

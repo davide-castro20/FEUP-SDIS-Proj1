@@ -1,10 +1,10 @@
-package g03.ChannelRunnables;
+package g03.Channels;
 
-import g03.Message;
-import g03.MessageType;
+import g03.Messages.Message;
+import g03.Messages.MessageType;
 import g03.Peer;
 
-import java.io.IOException;
+import java.util.Arrays;
 
 public class MDB implements Runnable {
 
@@ -21,7 +21,7 @@ public class MDB implements Runnable {
                 byte[] packet = peer.getMDB().receive();
                 if(packet == null)
                     continue;
-                System.out.println(packet.toString());
+                System.out.println(Arrays.toString(packet));
                 Message m = new Message(packet);
 //                System.out.println(m.toString());
                 if (m.getSenderId() != peer.getId() && m.getType() == MessageType.PUTCHUNK) {

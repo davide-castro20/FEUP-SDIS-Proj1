@@ -17,6 +17,7 @@ then
 	peer_id=$1
 	mkdir test/"${peer_id}" || true
 	mkdir test/"${peer_id}"/backup || true
+	mkdir test/"${peer_id}"/restore || true
 else
 	echo "Usage: $0 [<peer_id>]]"
 	exit 1

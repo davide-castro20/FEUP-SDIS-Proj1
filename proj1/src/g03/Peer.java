@@ -1,8 +1,11 @@
 package g03;
 
-import g03.ChannelRunnables.MC;
-import g03.ChannelRunnables.MDB;
-import g03.ChannelRunnables.MDR;
+import g03.Channels.Channel;
+import g03.Channels.MC;
+import g03.Channels.MDB;
+import g03.Channels.MDR;
+import g03.Enchancements.Enhancements;
+import g03.Messages.Message;
 import g03.Protocols.*;
 
 import java.io.*;
@@ -294,7 +297,7 @@ public class Peer implements PeerStub {
         }
     }
 
-    public double getRemainingSpace() { return maxSpace - currentSpace; }; // in bytes
+    public double getRemainingSpace() { return maxSpace - currentSpace; } // in bytes
 
     public ConcurrentMap<String, ScheduledFuture<?>> getBackupsToSend() {
         return backupsToSend;

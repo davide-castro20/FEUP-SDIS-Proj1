@@ -1,4 +1,4 @@
-package g03;
+package g03.Messages;
 
 public enum MessageType {
     STORED,

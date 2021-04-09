@@ -1,8 +1,8 @@
 package g03.Protocols;
 
 import g03.Chunk;
-import g03.Message;
-import g03.MessageType;
+import g03.Messages.Message;
+import g03.Messages.MessageType;
 import g03.Peer;
 
 import java.io.File;

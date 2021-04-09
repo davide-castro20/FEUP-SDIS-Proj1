@@ -1,4 +1,7 @@
-package g03;
+package g03.Protocols;
+
+import g03.Messages.Message;
+import g03.Peer;
 
 import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
@@ -22,7 +25,7 @@ public class ChunkMessageSender implements Runnable {
     public void run() {
         try {
             this.peer.getMDR().send(this.toSend);
-            String key = this.toSend.fileId + "-" + this.toSend.chunkNumber;
+            String key = this.toSend.getFileId() + "-" + this.toSend.getChunkNumber();
             this.peer.getMessagesToSend().remove(key);
         } catch (IOException e) {
             e.printStackTrace();

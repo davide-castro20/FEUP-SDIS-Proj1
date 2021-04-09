@@ -1,4 +1,7 @@
-package g03;
+package g03.Enchancements;
+
+import g03.FileInfo;
+import g03.Peer;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -7,10 +10,10 @@ import java.net.SocketTimeoutException;
 import java.util.Arrays;
 
 public class TCPInitiator implements Runnable {
-    private Peer peer;
-    private String fileHash;
-    private int chunkNumber;
-    private int port;
+    private final Peer peer;
+    private final String fileHash;
+    private final int chunkNumber;
+    private final int port;
 
     public TCPInitiator(Peer peer, String fileHash, int chunkNumber, int port) {
         this.peer = peer;

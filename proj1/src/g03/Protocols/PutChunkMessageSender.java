@@ -1,4 +1,7 @@
-package g03;
+package g03.Protocols;
+
+import g03.Messages.Message;
+import g03.Peer;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;

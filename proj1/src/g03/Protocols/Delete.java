@@ -1,11 +1,10 @@
 package g03.Protocols;
 
 import g03.FileInfo;
-import g03.Message;
-import g03.MessageType;
+import g03.Messages.Message;
+import g03.Messages.MessageType;
 import g03.Peer;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;

@@ -1,8 +1,6 @@
 package g03;
 
 import java.io.*;
-import java.rmi.RemoteException;
-import java.util.Map;
 
 public class Synchronizer implements Runnable {
     Peer peer;
