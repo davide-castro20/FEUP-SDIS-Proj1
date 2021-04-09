@@ -28,28 +28,28 @@ public class MC implements Runnable {
         while (true) {
             try {
                 byte[] packet = peer.getMC().receive();
-                if(packet == null)
+                if (packet == null)
                     continue;
                 Message message = new Message(packet);
 
-                if(message.getSenderId() == peer.getId())
+                if (message.getSenderId() == peer.getId())
                     continue;
                 //TODO: refactor - maybe change this to runnable classes
                 Runnable run = null;
-                switch(message.getType()) {
+                switch (message.getType()) {
                     case STORED:
-                         run = () -> {
-                             String key = message.getFileId() + "-" + message.getChunkNumber();
+                        run = () -> {
+                            String key = message.getFileId() + "-" + message.getChunkNumber();
 
-                             System.out.println("RECEIVED STORED " + key + " FROM " + message.getSenderId());
+                            System.out.println("RECEIVED STORED " + key + " FROM " + message.getSenderId());
 
 
-                             if (peer.getChunks().containsKey(key)) {
+                            if (peer.getChunks().containsKey(key)) {
                                 Chunk c = peer.getChunks().get(key);
                                 c.getPeers().add(message.getSenderId());
-                             } else if(peer.getFiles().containsKey(message.getFileId())) { //if this peer has the original file
+                            } else if (peer.getFiles().containsKey(message.getFileId())) { //if this peer has the original file
                                 peer.getFiles().get(message.getFileId()).getChunksPeers().get(message.getChunkNumber()).addPeer(message.getSenderId());
-                             }
+                            }
                         };
                         break;
 
@@ -67,7 +67,7 @@ public class MC implements Runnable {
                                 byte[] body = null;
                                 int port = -1;
                                 System.out.println("GETCHUNK " + message.getProtocolVersion() + " " + peer.getProtocolVersion() + " " + message.getPort());
-                                if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE)
+                                if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE)
                                         && Peer.supportsEnhancement(message.getProtocolVersion(), Enhancements.RESTORE)) {
 
                                     port = message.getPort();
@@ -92,7 +92,7 @@ public class MC implements Runnable {
                         break;
 
                     case DELETE:
-                        run = () ->
+                        run = () -> {
                             peer.getChunks().forEach((key, value) -> {
                                 System.out.println("CHECKING FOR CHUNK TO DELETE " + key);
                                 if (key.startsWith(message.getFileId()) && peer.getChunks().remove(key, value)) {
@@ -103,8 +103,29 @@ public class MC implements Runnable {
                                 }
                             });
 
-                        break;
+                            if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE)) {
 
+                                String[] msgArgs = {peer.getProtocolVersion(),
+                                        String.valueOf(peer.getId()),
+                                        message.getFileId()
+                                };
+                                Message msgToSend = new Message(MessageType.DELETED, msgArgs, null);
+                                peer.getPool().execute(() -> {
+                                    try {
+                                        peer.getMC().send(msgToSend);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                });
+                            }
+                        };
+
+                        break;
+                    case DELETED:
+                        if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE)){
+
+                        }
+                        break;
                     case REMOVED:
                         run = () -> {
                             String key = message.getFileId() + "-" + message.getChunkNumber();
@@ -132,15 +153,15 @@ public class MC implements Runnable {
                                         }
                                         final Message msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
 
-                                        if(peer.getStoppedMDB() && Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.BACKUP)) {
+                                        if (peer.getStoppedMDB() && Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.BACKUP)) {
                                             peer.restartMDB();
                                         }
 
                                         System.out.println("SCHEDULING PUTCHUNK WITH " + data.length + " BYTES OF DATA");
-                                        ScheduledFuture<?> task = peer.getPool().schedule( () -> {
+                                        ScheduledFuture<?> task = peer.getPool().schedule(() -> {
                                             new PutChunkMessageSender(peer, msgToSend, peer.getChunks().get(key).getDesiredReplicationDegree(), 5).run();
-                                            if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.BACKUP)) {
-                                                if(!peer.getStoppedMDB() && peer.getCurrentSpace() == peer.getMaxSpace()) {
+                                            if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.BACKUP)) {
+                                                if (!peer.getStoppedMDB() && peer.getCurrentSpace() == peer.getMaxSpace()) {
                                                     try {
                                                         peer.interruptMDB();
                                                     } catch (IOException e) {
@@ -155,7 +176,7 @@ public class MC implements Runnable {
                                         e.printStackTrace();
                                     }
                                 }
-                            } else if(peer.getFiles().containsKey(message.getFileId())) {
+                            } else if (peer.getFiles().containsKey(message.getFileId())) {
                                 peer.getFiles().get(message.getFileId()).getChunksPeers().get(message.getChunkNumber()).removePeer(message.getSenderId());
                             }
                         };
@@ -163,7 +184,7 @@ public class MC implements Runnable {
                     default:
                         break;
                 }
-                if(run != null)
+                if (run != null)
                     peer.getPool().execute(run);
             } catch (IOException e) {
                 e.printStackTrace();

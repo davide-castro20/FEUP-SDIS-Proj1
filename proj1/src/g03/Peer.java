@@ -42,7 +42,11 @@ public class Peer implements PeerStub {
 
     Set<Runnable> ongoing;
 
+    //Used for the RESTORE Enhancement
     ConcurrentMap<String, ScheduledFuture<?>> tcpConnections;
+
+    //Used for the DELETE Enhancement
+    ConcurrentMap<String, Set<Integer>> peersDidNotDeleteFiles;
 
     ConcurrentLinkedQueue<Integer> tcp_ports;
     ScheduledExecutorService pool;
@@ -73,8 +77,6 @@ public class Peer implements PeerStub {
 
         peer.synchronizer.scheduleAtFixedRate(new Synchronizer(peer), 0, 2, TimeUnit.SECONDS);
 
-
-
     }
 
     public Peer(int id, String protocolVersion, String serviceAccessPointName, Channel MCChannel, Channel MDBChannel, Channel MDRChannel) throws AlreadyBoundException, RemoteException {
@@ -101,10 +103,12 @@ public class Peer implements PeerStub {
 
 //        this.checkChunks();
 
-
+        //TODO: Start with port 0
         this.tcp_ports = IntStream.range(40000 + 100*(id-1), 40000 + 100*id).boxed()
                 .collect(Collectors.toCollection(ConcurrentLinkedQueue::new));
         this.tcpConnections = new ConcurrentHashMap<>();
+
+        this.peersDidNotDeleteFiles = new ConcurrentHashMap<>();
 
         this.bindRMI();
 
@@ -345,32 +349,10 @@ public class Peer implements PeerStub {
     }
 
     public boolean getStoppedMDB() { return stoppedMDB; }
+
+    public ConcurrentMap<String, Set<Integer>> getPeersDidNotDeleteFiles() {
+        return peersDidNotDeleteFiles;
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

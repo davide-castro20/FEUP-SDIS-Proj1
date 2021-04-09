@@ -1,11 +1,15 @@
 package g03.Protocols;
 
+import g03.Chunk;
+import g03.Enchancements.Enhancements;
 import g03.FileInfo;
 import g03.Messages.Message;
 import g03.Messages.MessageType;
 import g03.Peer;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -42,6 +46,17 @@ public class Delete implements Runnable {
 
             this.peer.getFiles().remove(match.getKey());
             deleted.set(true);
+
+            if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE)) {
+                Set<Integer> peers = new HashSet<>();
+
+                for (Map.Entry<String, FileInfo> entry : peer.getFiles().entrySet()) {
+                    for (Chunk c : entry.getValue().getChunksPeers()){
+                        peers.addAll(c.getPeers());
+                    }
+                }
+                peer.getPeersDidNotDeleteFiles().put(hash, peers);
+            }
         });
 
         if(deleted.get()) {

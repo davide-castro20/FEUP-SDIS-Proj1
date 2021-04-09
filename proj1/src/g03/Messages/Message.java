@@ -57,7 +57,7 @@ public class Message {
             this.chunkNumber = Integer.parseInt(args[3]);
             this.replicationDegree = Integer.parseInt(args[4]);
 
-        } else if(type != MessageType.DELETE) {
+        } else if(type != MessageType.DELETE && type != MessageType.DELETED) {
             this.chunkNumber = Integer.parseInt(args[3]);
 
             if(Peer.supportsEnhancement(protocolVersion, Enhancements.RESTORE) && this.type == MessageType.GETCHUNK) {
