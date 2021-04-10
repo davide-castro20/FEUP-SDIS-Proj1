@@ -159,6 +159,7 @@ public class Peer implements PeerStub {
     private void checkOperations() {
         for(String op : ongoing) {
             String[] opElems = op.split("-");
+            ongoing.remove(op);
             switch (opElems[0]) {
                 case "backup":
                     this.backup(opElems[1], Integer.parseInt(opElems[2]));
@@ -196,6 +197,7 @@ public class Peer implements PeerStub {
         String opName = "backup-" + path + "-" + replicationDegree;
         if(ongoing.contains(opName)) //if a similar operation is ongoing
             return;
+        ongoing.add(opName);
 
         Backup backupRun = new Backup(this, path, replicationDegree);
         pool.execute(backupRun);
@@ -206,6 +208,7 @@ public class Peer implements PeerStub {
         String opName = "restore-" + path;
         if(ongoing.contains(opName)) //if a similar operation is ongoing
             return;
+        ongoing.add(opName);
 
         Restore restoreRun = new Restore(this, path);
         pool.execute(restoreRun);
@@ -216,6 +219,7 @@ public class Peer implements PeerStub {
         String opName = "delete-" + path;
         if(ongoing.contains(opName)) //if a similar operation is ongoing
             return;
+        ongoing.add(opName);
 
         Delete deleteRun = new Delete(this, path);
         pool.execute(deleteRun);
@@ -223,9 +227,10 @@ public class Peer implements PeerStub {
 
     @Override
     public void reclaim(long amountOfKBytes) {
-        String opName = "reclaim-" + amountOfKBytes;
+        String opName = "reclaim-" + (amountOfKBytes * 1000);
         if(ongoing.contains(opName)) //if a similar operation is ongoing
             return;
+        ongoing.add(opName);
 
         Reclaim reclaimRun = new Reclaim(this, amountOfKBytes * 1000);
         pool.execute(reclaimRun);
