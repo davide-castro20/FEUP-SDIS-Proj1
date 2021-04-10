@@ -92,7 +92,7 @@ public class ReceiveChunk implements Runnable {
                 null);
     
         //Refactor
-        peer.getPool().schedule(() -> {
+        peer.getRestorePool().schedule(() -> {
             try {
                 this.peer.getMC().send(reply);
             } catch (IOException e) {

@@ -40,7 +40,7 @@ public class PutChunkMessageSender implements Runnable {
             if (currentIteration < maxIterations && actualRepDegree < desiredReplicationDegree) {
                 System.out.println("SENDING ^");
                 this.peer.getMDB().send(message);
-                this.peer.getPool().schedule(this, (int)Math.pow(2, currentIteration), TimeUnit.SECONDS);
+                this.peer.getBackupPool().schedule(this, (int)Math.pow(2, currentIteration), TimeUnit.SECONDS);
             } else { //set this chunk as sent
                 if(this.peer.getFiles().containsKey(message.getFileId())) {
                     FileInfo fileInfo = peer.getFiles().get(message.getFileId());

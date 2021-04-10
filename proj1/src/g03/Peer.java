@@ -51,7 +51,10 @@ public class Peer implements PeerStub {
     ConcurrentMap<String, Set<Integer>> peersDidNotDeleteFiles; //
 
     ConcurrentLinkedQueue<Integer> tcp_ports;
-    ScheduledExecutorService pool;
+    ScheduledExecutorService backupPool;
+    ScheduledExecutorService restorePool;
+    ScheduledExecutorService reclaimPool;
+    ScheduledExecutorService deletePool;
     ScheduledExecutorService synchronizer;
 
     long maxSpace = 100000000000L; // bytes
@@ -98,7 +101,10 @@ public class Peer implements PeerStub {
 
         this.ongoing = new HashSet<>();
 
-        this.pool = Executors.newScheduledThreadPool(16);
+        this.backupPool = Executors.newScheduledThreadPool(16);
+        this.reclaimPool = Executors.newScheduledThreadPool(16);
+        this.deletePool = Executors.newScheduledThreadPool(16);
+        this.restorePool = Executors.newScheduledThreadPool(16);
         this.synchronizer = Executors.newSingleThreadScheduledExecutor();
 
         //TODO: Start with port 0
@@ -189,7 +195,7 @@ public class Peer implements PeerStub {
 
     public void receive(Message message) {
         ReceiveChunk receiveRun = new ReceiveChunk(this, message);
-        pool.execute(receiveRun);
+        restorePool.execute(receiveRun);
     }
 
     @Override
@@ -200,7 +206,7 @@ public class Peer implements PeerStub {
         ongoing.add(opName);
 
         Backup backupRun = new Backup(this, path, replicationDegree);
-        pool.execute(backupRun);
+        backupPool.execute(backupRun);
     }
 
     @Override
@@ -211,7 +217,7 @@ public class Peer implements PeerStub {
         ongoing.add(opName);
 
         Restore restoreRun = new Restore(this, path);
-        pool.execute(restoreRun);
+        restorePool.execute(restoreRun);
     }
 
     @Override
@@ -222,7 +228,7 @@ public class Peer implements PeerStub {
         ongoing.add(opName);
 
         Delete deleteRun = new Delete(this, path);
-        pool.execute(deleteRun);
+        deletePool.execute(deleteRun);
     }
 
     @Override
@@ -233,7 +239,7 @@ public class Peer implements PeerStub {
         ongoing.add(opName);
 
         Reclaim reclaimRun = new Reclaim(this, amountOfKBytes * 1000);
-        pool.execute(reclaimRun);
+        reclaimPool.execute(reclaimRun);
     }
 
     @Override
@@ -295,8 +301,20 @@ public class Peer implements PeerStub {
         return messagesToSend;
     }
 
-    public ScheduledExecutorService getPool() {
-        return pool;
+    public ScheduledExecutorService getBackupPool() {
+        return backupPool;
+    }
+
+    public ScheduledExecutorService getReclaimPool() {
+        return reclaimPool;
+    }
+
+    public ScheduledExecutorService getDeletePool() {
+        return deletePool;
+    }
+
+    public ScheduledExecutorService getRestorePool() {
+        return restorePool;
     }
 
     public ConcurrentMap<String, List<Integer>> getChunksToRestore() {

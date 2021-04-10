@@ -82,7 +82,7 @@ public class MDR implements Runnable {
                             e.printStackTrace();
                         }
                     };
-                    peer.getPool().execute(run);
+                    peer.getRestorePool().execute(run);
                 }
             } catch (IOException e) {
                 e.printStackTrace();

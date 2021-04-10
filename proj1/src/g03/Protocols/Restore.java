@@ -48,7 +48,7 @@ public class Restore implements Runnable {
                 System.out.println("TESTE");
                 if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE)) {
                     int port = peer.getTcp_ports().remove();
-                    ScheduledFuture<?> tcp_task = peer.getPool().schedule(new TCPInitiator(peer, hash, i, port), 0, TimeUnit.MICROSECONDS);
+                    ScheduledFuture<?> tcp_task = peer.getRestorePool().schedule(new TCPInitiator(peer, hash, i, port), 0, TimeUnit.MICROSECONDS);
                     peer.getTcpConnections().put(hash + "-" + i, tcp_task);
                     msgArgs.add(Integer.toString(port));
                 }

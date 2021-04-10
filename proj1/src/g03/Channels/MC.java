@@ -55,8 +55,8 @@ public class MC implements Runnable {
                                 peer.getFiles().get(message.getFileId()).getChunksPeers().get(message.getChunkNumber()).addPeer(message.getSenderId());
                             }
                         };
+                        peer.getBackupPool().execute(run);
                         break;
-
                     case GETCHUNK:
                         run = () -> {
                             String key = message.getFileId() + "-" + message.getChunkNumber();
@@ -88,13 +88,13 @@ public class MC implements Runnable {
 
                                 //Schedule the CHUNK message
                                 Message msgToSend = new Message(MessageType.CHUNK, msgArgs, body);
-                                ScheduledFuture<?> task = peer.getPool().schedule(new ChunkMessageSender(peer, msgToSend, port), new Random().nextInt(400), TimeUnit.MILLISECONDS);
+                                ScheduledFuture<?> task = peer.getRestorePool().schedule(new ChunkMessageSender(peer, msgToSend, port), new Random().nextInt(400), TimeUnit.MILLISECONDS);
                                 peer.getMessagesToSend().put(key, task);
 
                             }
                         };
+                        peer.getRestorePool().execute(run);
                         break;
-
                     case DELETE:
                         run = () -> {
                             peer.getChunks().forEach((key, value) -> {
@@ -114,7 +114,7 @@ public class MC implements Runnable {
                                         message.getFileId()
                                 };
                                 Message msgToSend = new Message(MessageType.DELETED, msgArgs, null);
-                                peer.getPool().execute(() -> {
+                                peer.getDeletePool().execute(() -> {
                                     try {
                                         peer.getMC().send(msgToSend);
                                     } catch (IOException e) {
@@ -123,7 +123,7 @@ public class MC implements Runnable {
                                 });
                             }
                         };
-
+                        peer.getDeletePool().execute(run);
                         break;
                     case DELETED:
                         if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE)) {
@@ -167,7 +167,7 @@ public class MC implements Runnable {
                                         }
 
                                         System.out.println("SCHEDULING PUTCHUNK WITH " + data.length + " BYTES OF DATA");
-                                        ScheduledFuture<?> task = peer.getPool().schedule(() -> {
+                                        ScheduledFuture<?> task = peer.getBackupPool().schedule(() -> {
                                             new PutChunkMessageSender(peer, msgToSend, peer.getChunks().get(key).getDesiredReplicationDegree(), 5).run();
                                             if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.BACKUP)) {
                                                 if (!peer.getStoppedMDB() && peer.getCurrentSpace() == peer.getMaxSpace()) {
@@ -189,12 +189,11 @@ public class MC implements Runnable {
                                 peer.getFiles().get(message.getFileId()).getChunksPeers().get(message.getChunkNumber()).removePeer(message.getSenderId());
                             }
                         };
+                        peer.getReclaimPool().execute(run);
                         break;
                     default:
                         break;
                 }
-                if (run != null)
-                    peer.getPool().execute(run);
             } catch (IOException e) {
                 e.printStackTrace();
             }

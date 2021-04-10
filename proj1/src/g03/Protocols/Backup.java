@@ -58,7 +58,7 @@ public class Backup implements Runnable {
                 } else {
                     msgToSend = new Message(MessageType.PUTCHUNK, msgArgs, data);
                 }
-                this.peer.getPool().execute(new PutChunkMessageSender(this.peer, msgToSend, replicationDegree, 5));
+                this.peer.getBackupPool().execute(new PutChunkMessageSender(this.peer, msgToSend, replicationDegree, 5));
             }
 
             FileInfo fileInfo = new FileInfo(path, hash, replicationDegree, nChunk);
