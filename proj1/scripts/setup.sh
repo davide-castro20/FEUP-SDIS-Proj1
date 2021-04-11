@@ -15,9 +15,10 @@ argc=$#
 if ((argc == 1 ))
 then
 	peer_id=$1
-	mkdir test/"${peer_id}" || true
-	mkdir test/"${peer_id}"/backup || true
-	mkdir test/"${peer_id}"/restore || true
+	mkdir test
+	mkdir test/"${peer_id}"
+	mkdir test/"${peer_id}"/backup
+	mkdir test/"${peer_id}"/restore
 else
 	echo "Usage: $0 [<peer_id>]]"
 	exit 1

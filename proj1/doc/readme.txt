@@ -17,6 +17,9 @@ To setup the folder structure of a peer, run the following scripts:
 This scripts will create the folder structure of a peer of id peer_id (this must be a integer).
 This must be run before executing a peer or the program will not run correctly.
 
+## Start the RMI
+start rmiregistry or just rmiregistry should be run in the src/build folder
+
 ### Execute a peer
 
 ../../scripts/peer.sh <version> <peer_id> <svc_access_point> <mc_addr> <mc_port> <mdb_addr> <mdb_port> <mdr_addr> <mdr_port>
