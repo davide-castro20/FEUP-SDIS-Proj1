@@ -10,6 +10,7 @@ import g03.Peer;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -48,7 +49,7 @@ public class Delete implements Runnable {
             deleted.set(true);
 
             if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE)) {
-                Set<Integer> peers = new HashSet<>();
+                Set<Integer> peers = ConcurrentHashMap.newKeySet();
 
                 for(Chunk c : match.getValue().getChunksPeers()) {
                     peers.addAll(c.getPeers());

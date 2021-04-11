@@ -333,8 +333,6 @@ public class Peer implements PeerStub {
                     e.printStackTrace();
                 }
             }
-
-            System.out.println(stoppedMDB);
         }
         return currentSpace;
     }
@@ -350,8 +348,6 @@ public class Peer implements PeerStub {
                     e.printStackTrace();
                 }
             }
-
-            System.out.println(stoppedMDB);
         }
 
         return currentSpace;
@@ -372,8 +368,6 @@ public class Peer implements PeerStub {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            System.out.println(stoppedMDB);
         }
     }
 
@@ -410,7 +404,6 @@ public class Peer implements PeerStub {
 
     public void interruptMDB() throws IOException {
         System.out.println("INTERRUPTING MDB");
-//        MDBthread.interrupt();
         this.stoppedMDB = true;
         MDBChannel.leaveGroup();
     }
