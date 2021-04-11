@@ -1,2 +1,0 @@
--ao dar eliminar uma chunk no reclaim, 
-se mais nenhum peer tiver a chunk eliminada o peer que tem o ficheiro original tem que iniciar um novo backup
