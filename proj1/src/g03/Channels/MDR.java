@@ -54,7 +54,7 @@ public class MDR implements Runnable {
                                         FileInfo fileInfo = peer.getFiles().values().stream().filter(f -> f.getHash().equals(m.getFileId())).findFirst().get();
 
                                         System.out.println(fileInfo.getPath() + "-restored");
-                                        try (FileOutputStream out = new FileOutputStream(fileInfo.getPath() + "-restored")) {
+                                        try (FileOutputStream out = new FileOutputStream("restore/" + fileInfo.getPath())) {
                                             for (int i = 0; i < fileInfo.getChunkAmount(); i++) {
                                                 System.out.println(m.getFileId() + "-" + i);
                                                 try (FileInputStream in = new FileInputStream("restore/" + m.getFileId() + "-" + i)) {
