@@ -88,7 +88,10 @@ public class MC implements Runnable {
 
                                 //Schedule the CHUNK message
                                 Message msgToSend = new Message(MessageType.CHUNK, msgArgs, body);
-                                ScheduledFuture<?> task = peer.getRestorePool().schedule(new ChunkMessageSender(peer, msgToSend, port), new Random().nextInt(400), TimeUnit.MILLISECONDS);
+                                ScheduledFuture<?> task = peer.getRestorePool().schedule(
+                                        new ChunkMessageSender(peer, msgToSend, port),
+                                        new Random().nextInt(400),
+                                        TimeUnit.MILLISECONDS);
                                 peer.getMessagesToSend().put(key, task);
 
                             }
@@ -126,14 +129,17 @@ public class MC implements Runnable {
                         peer.getDeletePool().execute(run);
                         break;
                     case DELETED:
-                        if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE)) {
-                            if(peer.getPeersDidNotDeleteFiles().containsKey(message.getFileId())) {
-                                peer.getPeersDidNotDeleteFiles().get(message.getFileId()).remove(message.getSenderId());
-                                if(peer.getPeersDidNotDeleteFiles().get(message.getFileId()).size() == 0) {
-                                    peer.getPeersDidNotDeleteFiles().remove(message.getFileId());
+                        run = () -> {
+                            if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE)) {
+                                if (peer.getPeersDidNotDeleteFiles().containsKey(message.getFileId())) {
+                                    peer.getPeersDidNotDeleteFiles().get(message.getFileId()).remove(message.getSenderId());
+                                    if (peer.getPeersDidNotDeleteFiles().get(message.getFileId()).size() == 0) {
+                                        peer.getPeersDidNotDeleteFiles().remove(message.getFileId());
+                                    }
                                 }
                             }
-                        }
+                        };
+                        peer.getDeletePool().execute(run);
                         break;
                     case REMOVED:
                         run = () -> {
