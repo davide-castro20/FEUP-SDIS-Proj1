@@ -63,9 +63,15 @@ public class Peer implements PeerStub {
     public static void main(String[] args) throws IOException, AlreadyBoundException {
         if (args.length != 9) {
             System.out.println("Usage: java Peer <protocol_version> <peer_id> <service_access_point> <MC_address> <MC_Port> <MDB_address> <MDB_Port> <MDR_address> <MDR_Port>");
+            return;
         }
 
         String protocolVersion = args[0];
+        if(!args[0].equals("1.0") && !args[0].equals("1.1") && !args[0].equals("1.2") && !args[0].equals("1.3") && !args[0].equals("1.4")) {
+            System.out.println("Protocol versions available: 1.0, 1.1, 1.2, 1.3, 1.4");
+            return;
+        }
+
         int peerId = Integer.parseInt(args[1]);
         String serviceAccessPointName = args[2];
 
@@ -394,6 +400,8 @@ public class Peer implements PeerStub {
                 return enhancement == Enhancements.BACKUP;
             case "1.3":
                 return enhancement == Enhancements.DELETE;
+            case "1.4":
+                return true;
             default:
                 break;
         }
