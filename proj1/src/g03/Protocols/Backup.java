@@ -23,8 +23,11 @@ public class Backup implements Runnable {
     public void run() {
 
         File fileToBackup = new File(path);
-        if(!fileToBackup.exists() || fileToBackup.isDirectory() || fileToBackup.length() > 64000000000L)
+        if(!fileToBackup.exists() || fileToBackup.isDirectory() || fileToBackup.length() > 64000000000L) {
+            peer.getOngoing().remove("backup-" + path + "-" + replicationDegree);
+            System.err.println("Backup " + path + ": File doesn't exist or has size larger than 64GB");
             return;
+        }
 
 
         String hash = Peer.getFileIdString(path, peer.getId());

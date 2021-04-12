@@ -61,22 +61,19 @@ public class Peer implements PeerStub {
     long currentSpace = 0; // bytes
 
     public static void main(String[] args) throws IOException, AlreadyBoundException {
-        if (args.length != 6) {
-            System.out.println("Usage: java Peer <protocol_version> <peer_id> <service_access_point> <MC_address>:<MC_Port> <MDB_address>:<MDB_Port> <MDR_address>:<MDR_Port>");
+        if (args.length != 9) {
+            System.out.println("Usage: java Peer <protocol_version> <peer_id> <service_access_point> <MC_address> <MC_Port> <MDB_address> <MDB_Port> <MDR_address> <MDR_Port>");
         }
 
         String protocolVersion = args[0];
         int peerId = Integer.parseInt(args[1]);
         String serviceAccessPointName = args[2];
 
-        String[] MCinfo = args[3].split(":");
-        Channel MCchannel = new Channel(MCinfo[0], Integer.parseInt(MCinfo[1]));
+        Channel MCchannel = new Channel(args[3], Integer.parseInt(args[4]));
 
-        String[] MDBinfo = args[4].split(":");
-        Channel MDBchannel = new Channel(MDBinfo[0], Integer.parseInt(MDBinfo[1]));
+        Channel MDBchannel = new Channel(args[5], Integer.parseInt(args[6]));
 
-        String[] MDRinfo = args[5].split(":");
-        Channel MDRchannel = new Channel(MDRinfo[0], Integer.parseInt(MDRinfo[1]));
+        Channel MDRchannel = new Channel(args[7], Integer.parseInt(args[8]));
 
         Peer peer = new Peer(peerId, protocolVersion, serviceAccessPointName, MCchannel, MDBchannel, MDRchannel);
 
