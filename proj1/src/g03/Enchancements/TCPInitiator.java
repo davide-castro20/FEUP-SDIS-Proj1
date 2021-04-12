@@ -48,12 +48,11 @@ public class TCPInitiator implements Runnable {
             if (peer.getChunksToRestore().containsKey(fileHash) && peer.getChunksToRestore().get(fileHash).size() == 0) {
                 peer.getChunksToRestore().remove(fileHash);
 
-                System.out.println("ASSEMBLING FILE");
                 FileInfo fileInfo = peer.getFiles().values().stream().filter(f -> f.getHash().equals(fileHash)).findFirst().get();
+                System.out.println("ASSEMBLING FILE: " + fileInfo.getPath());
 
                 try (FileOutputStream out = new FileOutputStream("restore/" + fileInfo.getPath())) {
                     for (int i = 0; i < fileInfo.getChunkAmount(); i++) {
-                        System.out.println(fileHash + "-" + i);
                         try (FileInputStream inChunk = new FileInputStream("restore/" + fileHash + "-" + i)) {
                             inChunk.transferTo(out);
                             inChunk.close();

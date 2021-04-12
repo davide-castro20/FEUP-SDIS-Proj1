@@ -41,7 +41,7 @@ public class Reclaim implements Runnable {
             File fileToRemove = new File("backup/" + chunkName);
 
             if (fileToRemove.delete()) {
-                System.out.println("DELETED " + chunkName);
+                System.out.println("SENDING REMOVED " + chunkName);
                 peer.removeSpace(peer.getChunks().get(stringChunkEntry.getKey()).getSize());
                 peer.getChunks().remove(stringChunkEntry.getKey());
                 try {

@@ -30,7 +30,12 @@ public class MC implements Runnable {
                 byte[] packet = peer.getMC().receive();
                 if (packet == null)
                     continue;
+
                 Message message = new Message(packet);
+                if (message.getType() == MessageType.UNKNOWN) {
+                    System.out.println("RECEIVED UNKNOWN MESSAGE. IGNORING...");
+                    continue;
+                }
 
                 if (message.getSenderId() == peer.getId())
                     continue;
@@ -38,7 +43,6 @@ public class MC implements Runnable {
                 if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE))
                     peer.checkDeleted(message);
 
-                //TODO: refactor - maybe change this to runnable classes
                 Runnable run = null;
                 switch (message.getType()) {
                     case STORED:
@@ -66,18 +70,12 @@ public class MC implements Runnable {
                                         message.getFileId(),
                                         String.valueOf(message.getChunkNumber())};
 
-                                //TODO: refactor
-
                                 byte[] body = null;
                                 int port = -1;
-                                System.out.println("GETCHUNK " + message.getProtocolVersion() + " " + peer.getProtocolVersion() + " " + message.getPort());
+                                System.out.println("RECEIVED GETCHUNK " + key + " FROM " + message.getSenderId());
                                 if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE)
                                         && Peer.supportsEnhancement(message.getProtocolVersion(), Enhancements.RESTORE)) {
-
                                     port = message.getPort();
-                                    System.out.println("PORT " + port);
-
-
                                 } else {
                                     try (FileInputStream file = new FileInputStream("backup/" + key)) {
                                         body = file.readAllBytes();
@@ -101,7 +99,6 @@ public class MC implements Runnable {
                     case DELETE:
                         run = () -> {
                             peer.getChunks().forEach((key, value) -> {
-                                System.out.println("CHECKING FOR CHUNK TO DELETE " + key);
                                 if (key.startsWith(message.getFileId()) && peer.getChunks().remove(key, value)) {
                                     System.out.println("DELETING CHUNK " + key);
                                     File chunkToDelete = new File("backup/" + key);
@@ -147,8 +144,6 @@ public class MC implements Runnable {
                             if (peer.getChunks().containsKey(key)) {
                                 peer.getChunks().get(key).getPeers().remove(message.getSenderId());
 
-
-                                //TODO: check if replication degree drops below desired (Kinda done)
                                 if (peer.getChunks().get(key).getPerceivedReplicationDegree() < peer.getChunks().get(key).getDesiredReplicationDegree()) {
                                     System.out.println("CHUNK " + key + " replication degree dropped below desired");
                                     byte[] data = new byte[64000];
@@ -172,7 +167,6 @@ public class MC implements Runnable {
                                             peer.restartMDB();
                                         }
 
-                                        System.out.println("SCHEDULING PUTCHUNK WITH " + data.length + " BYTES OF DATA");
                                         ScheduledFuture<?> task = peer.getBackupPool().schedule(() -> {
                                             new PutChunkMessageSender(peer, msgToSend, peer.getChunks().get(key).getDesiredReplicationDegree(), 5).run();
                                             if (Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.BACKUP)) {
@@ -186,7 +180,6 @@ public class MC implements Runnable {
                                             }
                                         }, new Random().nextInt(400), TimeUnit.MILLISECONDS);
                                         peer.getBackupsToSend().put(key, task);
-                                        System.out.println(peer.getBackupsToSend().keySet());
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }

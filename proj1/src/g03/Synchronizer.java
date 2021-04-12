@@ -30,7 +30,6 @@ public class Synchronizer implements Runnable {
         {
             PeerState peerState = peer.state();
             outFiles.writeObject(peerState);
-            System.out.println(peerState.onGoingOperations.toString());
 
         } catch (IOException e) {
             e.printStackTrace();

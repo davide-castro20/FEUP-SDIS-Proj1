@@ -25,7 +25,7 @@ public class ReceiveChunk implements Runnable {
     public void run() {
         String key = message.getFileId() + "-" + message.getChunkNumber();
 
-        System.out.println("RECEIVING " + key);
+        System.out.println("RECEIVING CHUNK " + key);
 
         if(!peer.getChunks().containsKey(key)) {
 

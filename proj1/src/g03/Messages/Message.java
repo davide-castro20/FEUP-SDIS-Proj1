@@ -22,7 +22,11 @@ public class Message {
         String[] header = message[0].split(" ");
 
         this.protocolVersion = header[0];
-        this.type = MessageType.valueOf(header[1]);
+        try {
+            this.type = MessageType.valueOf(header[1]);
+        } catch (IllegalArgumentException e) {
+            this.type = MessageType.UNKNOWN;
+        }
         this.senderId = Integer.parseInt(header[2]);
         this.fileId = header[3];
 

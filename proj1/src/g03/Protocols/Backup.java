@@ -49,7 +49,6 @@ public class Backup implements Runnable {
                 nRead = file.read(data, 0, 64000);
                 if(nRead == -1)
                     nRead = 0;
-                System.out.println(nRead);
                 Message msgToSend;
                 msgArgs[3] = String.valueOf(nChunk); // set chunk number
                 nChunk++;

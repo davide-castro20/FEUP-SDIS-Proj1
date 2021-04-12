@@ -23,24 +23,28 @@ public class MDR implements Runnable {
                 if(packet == null)
                     continue;
                 Message m = new Message(packet);
+                if (m.getType() == MessageType.UNKNOWN) {
+                    System.out.println("RECEIVED UNKNOWN MESSAGE. IGNORING...");
+                    continue;
+                }
 
                 if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.DELETE))
                     peer.checkDeleted(m);
 
                 if (m.getSenderId() != peer.getId() && m.getType() == MessageType.CHUNK
                         && (!Peer.supportsEnhancement(m.getProtocolVersion(), Enhancements.RESTORE) || !Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE))) {
-                    //TODO: maybe refactor this
+
                     Runnable run;
                     run = () -> {
                         try {
-                            System.out.println("CHUNK NUMBER: " + m.getChunkNumber());
+                            System.out.println("RECEIVING CHUNK FOR RESTORE: " + m.getFileId() + "-" + m.getChunkNumber());
                             if (peer.getChunksToRestore().containsKey(m.getFileId())) {
                                 if (peer.getChunksToRestore().get(m.getFileId()).contains(m.getChunkNumber())) {
                                     if(Peer.supportsEnhancement(peer.getProtocolVersion(), Enhancements.RESTORE)) {
                                         //cancel tcp accept wait
                                         peer.getTcpConnections().get(m.getFileId() + "-" + m.getChunkNumber()).cancel(true);
                                     }
-                                    //TODO: usar nio?
+
                                     try (FileOutputStream out = new FileOutputStream("restore/" + m.getFileId() + "-" + m.getChunkNumber())) {
                                         out.write(m.getBody());
                                     } catch (Exception e) {
@@ -50,13 +54,11 @@ public class MDR implements Runnable {
                                     if (peer.getChunksToRestore().containsKey(m.getFileId()) && peer.getChunksToRestore().get(m.getFileId()).size() == 0) {
                                         peer.getChunksToRestore().remove(m.getFileId());
 
-                                        System.out.println("ASSEMBLING FILE");
                                         FileInfo fileInfo = peer.getFiles().values().stream().filter(f -> f.getHash().equals(m.getFileId())).findFirst().get();
+                                        System.out.println("ASSEMBLING FILE: " + fileInfo.getPath());
 
-                                        System.out.println(fileInfo.getPath() + "-restored");
                                         try (FileOutputStream out = new FileOutputStream("restore/" + fileInfo.getPath())) {
                                             for (int i = 0; i < fileInfo.getChunkAmount(); i++) {
-                                                System.out.println(m.getFileId() + "-" + i);
                                                 try (FileInputStream in = new FileInputStream("restore/" + m.getFileId() + "-" + i)) {
                                                     in.transferTo(out);
                                                     in.close();

@@ -30,7 +30,7 @@ public class PutChunkMessageSender implements Runnable {
         try {
             currentIteration++;
             String key = message.getFileId() + "-" + message.getChunkNumber();
-            System.out.println("PUTCHUNK " + key);
+
             if (this.peer.getChunks().containsKey(key)) {
                 actualRepDegree = this.peer.getChunks().get(key).getPerceivedReplicationDegree();
 
@@ -38,7 +38,7 @@ public class PutChunkMessageSender implements Runnable {
                 actualRepDegree = this.peer.getFiles().get(message.getFileId()).getChunksPeers().get(message.getChunkNumber()).getPerceivedReplicationDegree();
             }
             if (currentIteration < maxIterations && actualRepDegree < desiredReplicationDegree) {
-                System.out.println("SENDING ^");
+                System.out.println("SENDING PUTCHUNK " + key);
                 this.peer.getMDB().send(message);
                 this.peer.getBackupPool().schedule(this, (int)Math.pow(2, currentIteration), TimeUnit.SECONDS);
             } else { //set this chunk as sent
