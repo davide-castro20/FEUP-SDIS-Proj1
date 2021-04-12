@@ -37,7 +37,7 @@ public class Message {
 
         int indexBody = packetStr.indexOf("\r\n\r\n");
         if(indexBody + 4 >= packet.length) {
-            if(type == MessageType.PUTCHUNK)
+            if(type == MessageType.PUTCHUNK || type == MessageType.CHUNK)
                 this.body = new byte[0];
             else
                 this.body = null;
