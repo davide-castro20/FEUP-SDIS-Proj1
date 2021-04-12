@@ -185,12 +185,16 @@ public class Peer implements PeerStub {
         }
     }
 
-    public void bindRMI() throws RemoteException, AlreadyBoundException {
+    public void bindRMI() throws RemoteException {
         PeerStub stub = (PeerStub) UnicastRemoteObject.exportObject(this, 0);
 
-        // Bind the remote object's stub in the registry
-        Registry registry = LocateRegistry.getRegistry();
-        registry.bind(this.serviceAccessPointName, stub);
+        try {
+            // Bind the remote object's stub in the registry
+            Registry registry = LocateRegistry.getRegistry();
+            registry.bind(this.serviceAccessPointName, stub);
+        } catch (Exception e) {
+            System.err.println("Couldn't bind RMI");
+        }
     }
 
     public void receive(Message message) {
