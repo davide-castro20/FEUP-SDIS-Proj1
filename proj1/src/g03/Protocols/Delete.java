@@ -28,7 +28,6 @@ public class Delete implements Runnable {
 
         Stream<Map.Entry<String, FileInfo>> matches = this.peer.getFiles().entrySet().stream().filter(f -> f.getValue().getPath().equals(path));
 
-        //TODO: maybe refactor (remember forEach() and count() are TERMINAL operations - WILL CONSUME the stream!)
         AtomicBoolean deleted = new AtomicBoolean(false);
 
         matches.forEach((match) -> {

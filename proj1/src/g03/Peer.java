@@ -110,7 +110,6 @@ public class Peer implements PeerStub {
         this.restorePool = Executors.newScheduledThreadPool(16);
         this.synchronizer = Executors.newSingleThreadScheduledExecutor();
 
-        //TODO: Start with port 0
         this.tcp_ports = IntStream.range(40000 + 100*(id-1), 40000 + 100*id).boxed()
                 .collect(Collectors.toCollection(ConcurrentLinkedQueue::new));
         this.tcpConnections = new ConcurrentHashMap<>();
